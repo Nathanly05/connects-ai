@@ -51,14 +51,20 @@ export async function approveRechargeAction(formData: FormData) {
 
 export async function rejectRechargeAction(formData: FormData) {
   const requestId = getString(formData, "requestId");
+  const rejectReason = getString(formData, "rejectReason");
 
   if (!requestId) {
     redirectWithMessage("error", "缺少充值申请 ID。");
   }
 
+  if (!rejectReason) {
+    redirectWithMessage("error", "请填写拒绝原因。");
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.rpc("admin_reject_recharge", {
-    p_request_id: requestId
+    p_request_id: requestId,
+    p_reject_reason: rejectReason
   });
 
   if (error) {

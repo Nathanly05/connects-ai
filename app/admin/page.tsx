@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MessageCircle, ShieldCheck, UsersRound } from "lucide-react";
+import { MessageCircle, ReceiptText, ShieldCheck, UsersRound } from "lucide-react";
 import { AdminUserActionControls } from "@/components/admin/admin-user-action-controls";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -153,12 +153,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               审核用户、调整 credits，并通过数据库函数写入 credit_logs。
             </p>
           </div>
-          <Button asChild variant="outline">
-            <Link href="/chat">
-              <MessageCircle aria-hidden="true" />
-              返回聊天
-            </Link>
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button asChild variant="secondary">
+              <Link href="/admin/recharges">
+                <ReceiptText aria-hidden="true" />
+                充值申请
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/chat">
+                <MessageCircle aria-hidden="true" />
+                返回聊天
+              </Link>
+            </Button>
+          </div>
         </header>
 
         <div className="grid gap-3 sm:grid-cols-3">

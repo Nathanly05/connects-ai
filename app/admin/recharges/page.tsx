@@ -1,12 +1,8 @@
 import { redirect } from "next/navigation";
-import { Check, ExternalLink, ReceiptText, X } from "lucide-react";
-import {
-  approveRechargeAction,
-  rejectRechargeAction
-} from "@/app/admin/recharges/actions";
+import { ReceiptText } from "lucide-react";
+import { RechargeReviewActions } from "@/components/admin/recharge-review-actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -33,14 +29,17 @@ type RechargeStatus = "pending" | "approved" | "rejected";
 type RechargeRequest = {
   id: string;
   user_id: string;
+  email: string | null;
+  package_name: string | null;
   amount: number;
-  credits: number;
+  payment_time: string | null;
+  remark: string | null;
   screenshot_url: string | null;
-  note: string | null;
   status: RechargeStatus;
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
+  reject_reason: string | null;
 };
 
 type AdminRechargesPageProps = {
@@ -62,7 +61,11 @@ function statusPath(status?: ProfileStatus | null) {
   return "/chat";
 }
 
-function formatDate(value: string) {
+function formatDate(value?: string | null) {
+  if (!value) {
+    return "未填写";
+  }
+
   return new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
     month: "2-digit",
@@ -93,42 +96,6 @@ function statusVariant(status: RechargeStatus) {
   }
 
   return "secondary";
-}
-
-function ReviewActions({ requestId }: { requestId: string }) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      <form action={approveRechargeAction}>
-        <input type="hidden" name="requestId" value={requestId} />
-        <Button type="submit" size="sm">
-          <Check aria-hidden="true" />
-          批准
-        </Button>
-      </form>
-      <form action={rejectRechargeAction}>
-        <input type="hidden" name="requestId" value={requestId} />
-        <Button type="submit" variant="destructive" size="sm">
-          <X aria-hidden="true" />
-          拒绝
-        </Button>
-      </form>
-    </div>
-  );
-}
-
-function ScreenshotLink({ url }: { url: string | null }) {
-  if (!url) {
-    return <span className="text-muted-foreground">未上传</span>;
-  }
-
-  return (
-    <Button asChild variant="outline" size="sm">
-      <a href={url} target="_blank" rel="noreferrer">
-        <ExternalLink aria-hidden="true" />
-        查看截图
-      </a>
-    </Button>
-  );
 }
 
 function SummaryItem({ label, value }: { label: string; value: number }) {
@@ -172,18 +139,12 @@ export default async function AdminRechargesPage({
 
   const { data, error } = await supabase
     .from("recharge_requests")
-    .select("id, user_id, amount, credits, screenshot_url, note, status, created_at, reviewed_at, reviewed_by")
+    .select(
+      "id, user_id, email, package_name, amount, payment_time, remark, screenshot_url, status, created_at, reviewed_at, reviewed_by, reject_reason"
+    )
     .order("created_at", { ascending: false });
 
   const requests = (data ?? []) as RechargeRequest[];
-  const userIds = [...new Set(requests.map((request) => request.user_id))];
-  const { data: profiles } =
-    userIds.length > 0
-      ? await supabase.from("profiles").select("id, email").in("id", userIds)
-      : { data: [] };
-  const emailByUserId = new Map(
-    (profiles ?? []).map((profile) => [profile.id as string, profile.email as string])
-  );
   const pendingCount = requests.filter((request) => request.status === "pending").length;
   const approvedCount = requests.filter((request) => request.status === "approved").length;
   const rejectedCount = requests.filter((request) => request.status === "rejected").length;
@@ -195,11 +156,11 @@ export default async function AdminRechargesPage({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <ReceiptText className="size-5 text-primary" aria-hidden="true" />
-              <h1 className="text-xl font-semibold tracking-normal">充值审核</h1>
+              <h1 className="text-xl font-semibold tracking-normal">充值申请管理</h1>
               <Badge variant="secondary">GlobePay</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              审核用户上传的付款截图，批准后自动发放 credits。
+              审核微信/支付宝扫码付款申请，批准后自动发放 credits。
             </p>
           </div>
         </header>
@@ -249,11 +210,10 @@ export default async function AdminRechargesPage({
                     <TableHeader>
                       <TableRow>
                         <TableHead>邮箱</TableHead>
+                        <TableHead>套餐</TableHead>
                         <TableHead>金额</TableHead>
-                        <TableHead>Credits</TableHead>
-                        <TableHead>截图</TableHead>
+                        <TableHead>申请时间</TableHead>
                         <TableHead>状态</TableHead>
-                        <TableHead>时间</TableHead>
                         <TableHead className="min-w-[170px]">操作</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -261,24 +221,21 @@ export default async function AdminRechargesPage({
                       {requests.map((request) => (
                         <TableRow key={request.id}>
                           <TableCell className="font-medium">
-                            {emailByUserId.get(request.user_id) ?? request.user_id}
+                            {request.email ?? request.user_id}
                           </TableCell>
-                          <TableCell>{Number(request.amount).toFixed(1)} RMB</TableCell>
-                          <TableCell>{request.credits}</TableCell>
-                          <TableCell>
-                            <ScreenshotLink url={request.screenshot_url} />
+                          <TableCell>{request.package_name ?? "未填写"}</TableCell>
+                          <TableCell>£{Number(request.amount).toFixed(2)}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {formatDate(request.created_at)}
                           </TableCell>
                           <TableCell>
                             <Badge variant={statusVariant(request.status)}>
                               {statusLabel(request.status)}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatDate(request.created_at)}
-                          </TableCell>
                           <TableCell>
                             {request.status === "pending" ? (
-                              <ReviewActions requestId={request.id} />
+                              <RechargeReviewActions requestId={request.id} />
                             ) : (
                               <span className="text-sm text-muted-foreground">已处理</span>
                             )}
@@ -295,30 +252,40 @@ export default async function AdminRechargesPage({
                       <div className="flex flex-col gap-3">
                         <div>
                           <p className="break-all text-sm font-medium">
-                            {emailByUserId.get(request.user_id) ?? request.user_id}
+                            {request.email ?? request.user_id}
                           </p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {formatDate(request.created_at)}
+                            申请时间：{formatDate(request.created_at)}
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline">{Number(request.amount).toFixed(1)} RMB</Badge>
-                          <Badge variant="outline">{request.credits} Credits</Badge>
+                          <Badge variant="outline">{request.package_name ?? "未填写"}</Badge>
+                          <Badge variant="outline">£{Number(request.amount).toFixed(2)}</Badge>
                           <Badge variant={statusVariant(request.status)}>
                             {statusLabel(request.status)}
                           </Badge>
                         </div>
-                        {request.note ? (
-                          <p className="rounded-md bg-secondary/60 px-3 py-2 text-sm leading-6 text-muted-foreground">
-                            {request.note}
-                          </p>
-                        ) : null}
-                        <div className="flex flex-wrap gap-2">
-                          <ScreenshotLink url={request.screenshot_url} />
-                          {request.status === "pending" ? (
-                            <ReviewActions requestId={request.id} />
+                        <div className="rounded-md bg-secondary/60 px-3 py-2 text-sm leading-6 text-muted-foreground">
+                          <p>付款时间：{formatDate(request.payment_time)}</p>
+                          {request.remark ? <p>备注：{request.remark}</p> : null}
+                          {request.screenshot_url ? (
+                            <p>
+                              截图链接：{" "}
+                              <a
+                                href={request.screenshot_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-primary hover:underline"
+                              >
+                                查看
+                              </a>
+                            </p>
                           ) : null}
+                          {request.reject_reason ? <p>拒绝原因：{request.reject_reason}</p> : null}
                         </div>
+                        {request.status === "pending" ? (
+                          <RechargeReviewActions requestId={request.id} />
+                        ) : null}
                       </div>
                     </div>
                   ))}

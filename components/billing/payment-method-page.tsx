@@ -215,15 +215,18 @@ function GlobePayInstructions({ basePath }: { basePath: "/billing" | "/recharge"
           <Card>
             <CardHeader>
               <CardTitle>充值说明</CardTitle>
-              <CardDescription>付款后无需上传截图，等待管理员人工审核。</CardDescription>
+              <CardDescription>付款后提交充值申请，等待管理员人工审核。</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-5">
               <ol className="space-y-3 text-sm leading-6 text-muted-foreground">
                 <li>1. 请扫码付款</li>
                 <li>2. 付款时备注你的注册邮箱</li>
                 <li>3. 付款后等待管理员审核</li>
                 <li>4. 审核通过后 credits 会到账</li>
               </ol>
+              <Button asChild className="w-full">
+                <Link href="/recharge/request">提交充值申请</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
