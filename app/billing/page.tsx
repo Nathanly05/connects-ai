@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import { PaymentMethodPage } from "@/components/billing/payment-method-page";
+
+export const metadata: Metadata = {
+  title: "Billing"
+};
 
 type BillingPageProps = {
   searchParams: Promise<{

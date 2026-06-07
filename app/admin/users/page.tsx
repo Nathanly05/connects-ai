@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ShieldCheck, UsersRound } from "lucide-react";
 import { UserActionControls } from "@/components/admin/user-action-controls";
@@ -23,6 +24,10 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Admin"
+};
 
 type ProfileRole = "user" | "admin";
 type ProfileStatus = "pending" | "approved" | "rejected";

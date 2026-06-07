@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { PaymentMethodPage } from "@/components/billing/payment-method-page";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Recharge"
+};
 
 type RechargePageProps = {
   searchParams: Promise<{
