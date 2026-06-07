@@ -47,7 +47,7 @@ function CreditDialog({ mode, userId, email, credits }: CreditDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant={isAdd ? "outline" : "secondary"} size="sm">
+        <Button variant={isAdd ? "outline" : "secondary"} size="sm" className="w-full sm:w-auto">
           {isAdd ? <Plus aria-hidden="true" /> : <Minus aria-hidden="true" />}
           {isAdd ? "增加" : "减少"}
         </Button>
@@ -83,13 +83,13 @@ function CreditDialog({ mode, userId, email, credits }: CreditDialogProps) {
               placeholder={defaultReason}
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" className="w-full sm:w-auto">
                 取消
               </Button>
             </DialogClose>
-            <Button type="submit" variant={isAdd ? "default" : "secondary"}>
+            <Button type="submit" variant={isAdd ? "default" : "secondary"} className="w-full sm:w-auto">
               确认{isAdd ? "增加" : "减少"}
             </Button>
           </DialogFooter>
@@ -106,20 +106,20 @@ export function AdminUserActionControls({
   credits
 }: AdminUserActionControlsProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
       {status === "pending" ? (
-        <form action={approveUserAction}>
+        <form action={approveUserAction} className="w-full sm:w-auto">
           <input type="hidden" name="userId" value={userId} />
-          <Button type="submit" size="sm">
+          <Button type="submit" size="sm" className="w-full sm:w-auto">
             <Check aria-hidden="true" />
             批准
           </Button>
         </form>
       ) : null}
       {status !== "rejected" ? (
-        <form action={rejectUserAction}>
+        <form action={rejectUserAction} className="w-full sm:w-auto">
           <input type="hidden" name="userId" value={userId} />
-          <Button type="submit" variant="destructive" size="sm">
+          <Button type="submit" variant="destructive" size="sm" className="w-full sm:w-auto">
             <X aria-hidden="true" />
             拒绝
           </Button>

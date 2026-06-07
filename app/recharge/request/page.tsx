@@ -39,10 +39,10 @@ export default async function RechargeRequestPage({
   }
 
   return (
-    <main className="page-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
-      <section className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+    <main className="page-shell min-h-screen px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <section className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-6">
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <ReceiptText className="size-5 text-primary" aria-hidden="true" />
               <h1 className="text-xl font-semibold tracking-normal">提交充值申请</h1>
@@ -52,7 +52,7 @@ export default async function RechargeRequestPage({
               付款后提交信息，管理员审核通过后 credits 会到账。
             </p>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/recharge?method=globepay">
               <ArrowLeft aria-hidden="true" />
               返回扫码充值
@@ -79,7 +79,7 @@ export default async function RechargeRequestPage({
               当前登录邮箱：{user.email ?? "未读取到邮箱"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
             <form action={submitGlobePayRechargeRequestAction} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="packageName">套餐</Label>

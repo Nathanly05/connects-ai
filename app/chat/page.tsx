@@ -6,11 +6,13 @@ import {
   MessageCircle,
   Plus,
   QrCode,
+  UserCircle,
   WalletCards
 } from "lucide-react";
 import { signOutAction } from "@/app/auth/actions";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
+import { MobileChatHistoryDrawer } from "@/components/chat/mobile-chat-history-drawer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -111,7 +113,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
   const isLowCredits = credits > 0 && credits <= 20;
 
   return (
-    <main className="page-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8">
+    <main className="page-shell min-h-screen px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -125,6 +127,11 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <MobileChatHistoryDrawer
+              sessions={sessions}
+              selectedSessionId={selectedSessionId}
+              sessionsError={sessionsError?.message ?? null}
+            />
             <div
               className={cn(
                 "inline-flex items-center gap-3 rounded-md border bg-white px-4 py-3 shadow-sm",
@@ -152,6 +159,12 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
               <Link href="/billing">
                 <CreditCard aria-hidden="true" />
                 Stripe 自动充值
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/account">
+                <UserCircle aria-hidden="true" />
+                账户
               </Link>
             </Button>
             <Button asChild variant="outline">
@@ -212,8 +225,8 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
           </Alert>
         ) : null}
 
-        <div className="grid min-h-[680px] gap-4 lg:grid-cols-[320px_1fr]">
-          <Card className="overflow-hidden">
+        <div className="grid min-h-[calc(100dvh-260px)] gap-4 lg:grid-cols-[320px_1fr]">
+          <Card className="hidden overflow-hidden lg:block">
             <CardHeader className="border-b">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -263,7 +276,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
           </Card>
 
           <Card className="flex overflow-hidden">
-            <div className="flex min-h-[680px] w-full flex-col">
+            <div className="flex min-h-[calc(100dvh-260px)] w-full flex-col">
               <CardHeader className="border-b">
                 <CardTitle className="text-lg">
                   {selectedSessionId
@@ -291,6 +304,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
                 credits={credits}
                 disabled={isOutOfCredits}
                 disabledMessage="Credits 已用完，请充值后继续使用。"
+                showQuickPrompts={!messagesError && messages.length === 0}
               />
             </div>
           </Card>

@@ -193,6 +193,21 @@ function EmptyState({ children }: { children: React.ReactNode }) {
   );
 }
 
+function DetailRow({
+  label,
+  children
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 text-sm">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span className="min-w-0 break-words text-right font-medium">{children}</span>
+    </div>
+  );
+}
+
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -300,10 +315,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   ].filter(Boolean);
 
   return (
-    <main className="page-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8">
+    <main className="page-shell min-h-screen px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <ShieldCheck className="size-5 text-primary" aria-hidden="true" />
               <h1 className="text-xl font-semibold tracking-normal">管理员后台</h1>
@@ -314,19 +329,19 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Button asChild variant="secondary">
+            <Button asChild variant="secondary" className="w-full sm:w-auto">
               <Link href="/admin/recharges">
                 <ReceiptText aria-hidden="true" />
                 充值申请
               </Link>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href="/admin/payments">
                 <CreditCard aria-hidden="true" />
                 Stripe 订单
               </Link>
             </Button>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href="/chat">
                 <MessageCircle aria-hidden="true" />
                 返回聊天
@@ -423,38 +438,60 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               {recentRecharges.length === 0 ? (
                 <EmptyState>暂时没有充值申请。</EmptyState>
               ) : (
-                <div className="overflow-x-auto rounded-lg border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>邮箱</TableHead>
-                        <TableHead>套餐</TableHead>
-                        <TableHead>金额</TableHead>
-                        <TableHead>状态</TableHead>
-                        <TableHead>时间</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentRecharges.map((request) => (
-                        <TableRow key={request.id}>
-                          <TableCell className="min-w-[180px] font-medium">
+                <>
+                  <div className="hidden overflow-x-auto rounded-lg border md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>邮箱</TableHead>
+                          <TableHead>套餐</TableHead>
+                          <TableHead>金额</TableHead>
+                          <TableHead>状态</TableHead>
+                          <TableHead>时间</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentRecharges.map((request) => (
+                          <TableRow key={request.id}>
+                            <TableCell className="min-w-[180px] font-medium">
+                              {request.email ?? emailByUserId.get(request.user_id) ?? request.user_id}
+                            </TableCell>
+                            <TableCell>{request.package_name ?? "未填写"}</TableCell>
+                            <TableCell>{formatCurrency(Number(request.amount))}</TableCell>
+                            <TableCell>
+                              <Badge variant={statusVariant(request.status)}>
+                                {rechargeStatusLabel(request.status)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="min-w-[140px] text-muted-foreground">
+                              {formatDate(request.created_at)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="grid gap-3 md:hidden">
+                    {recentRecharges.map((request) => (
+                      <div key={request.id} className="rounded-lg border bg-white p-4 shadow-sm">
+                        <div className="space-y-3">
+                          <p className="break-all text-sm font-medium">
                             {request.email ?? emailByUserId.get(request.user_id) ?? request.user_id}
-                          </TableCell>
-                          <TableCell>{request.package_name ?? "未填写"}</TableCell>
-                          <TableCell>{formatCurrency(Number(request.amount))}</TableCell>
-                          <TableCell>
+                          </p>
+                          <DetailRow label="套餐">{request.package_name ?? "未填写"}</DetailRow>
+                          <DetailRow label="金额">{formatCurrency(Number(request.amount))}</DetailRow>
+                          <DetailRow label="状态">
                             <Badge variant={statusVariant(request.status)}>
                               {rechargeStatusLabel(request.status)}
                             </Badge>
-                          </TableCell>
-                          <TableCell className="min-w-[140px] text-muted-foreground">
-                            {formatDate(request.created_at)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                          </DetailRow>
+                          <DetailRow label="时间">{formatDate(request.created_at)}</DetailRow>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -471,24 +508,56 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               {recentCreditLogs.length === 0 ? (
                 <EmptyState>暂时没有 credits 变动。</EmptyState>
               ) : (
-                <div className="overflow-x-auto rounded-lg border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>用户</TableHead>
-                        <TableHead>变动</TableHead>
-                        <TableHead>余额</TableHead>
-                        <TableHead>原因</TableHead>
-                        <TableHead>时间</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentCreditLogs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="min-w-[180px] font-medium">
+                <>
+                  <div className="hidden overflow-x-auto rounded-lg border md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>用户</TableHead>
+                          <TableHead>变动</TableHead>
+                          <TableHead>余额</TableHead>
+                          <TableHead>原因</TableHead>
+                          <TableHead>时间</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentCreditLogs.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell className="min-w-[180px] font-medium">
+                              {emailByUserId.get(log.user_id) ?? log.user_id}
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={
+                                  log.amount >= 0
+                                    ? "font-semibold text-primary"
+                                    : "font-semibold text-destructive"
+                                }
+                              >
+                                {formatCreditAmount(log.amount)}
+                              </span>
+                            </TableCell>
+                            <TableCell>{formatInteger(log.balance_after)}</TableCell>
+                            <TableCell className="min-w-[180px] text-muted-foreground">
+                              {log.reason ?? "未填写"}
+                            </TableCell>
+                            <TableCell className="min-w-[140px] text-muted-foreground">
+                              {formatDate(log.created_at)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="grid gap-3 md:hidden">
+                    {recentCreditLogs.map((log) => (
+                      <div key={log.id} className="rounded-lg border bg-white p-4 shadow-sm">
+                        <div className="space-y-3">
+                          <p className="break-all text-sm font-medium">
                             {emailByUserId.get(log.user_id) ?? log.user_id}
-                          </TableCell>
-                          <TableCell>
+                          </p>
+                          <DetailRow label="变动">
                             <span
                               className={
                                 log.amount >= 0
@@ -498,19 +567,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                             >
                               {formatCreditAmount(log.amount)}
                             </span>
-                          </TableCell>
-                          <TableCell>{formatInteger(log.balance_after)}</TableCell>
-                          <TableCell className="min-w-[180px] text-muted-foreground">
-                            {log.reason ?? "未填写"}
-                          </TableCell>
-                          <TableCell className="min-w-[140px] text-muted-foreground">
-                            {formatDate(log.created_at)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                          </DetailRow>
+                          <DetailRow label="余额">{formatInteger(log.balance_after)}</DetailRow>
+                          <DetailRow label="原因">{log.reason ?? "未填写"}</DetailRow>
+                          <DetailRow label="时间">{formatDate(log.created_at)}</DetailRow>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -528,42 +593,64 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             {recentUsers.length === 0 ? (
               <EmptyState>暂时没有注册用户。</EmptyState>
             ) : (
-              <div className="overflow-x-auto rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>邮箱</TableHead>
-                      <TableHead>角色</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>Credits</TableHead>
-                      <TableHead>注册时间</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentUsers.map((profile) => (
-                      <TableRow key={profile.id}>
-                        <TableCell className="min-w-[220px] font-medium">
-                          {profile.email}
-                        </TableCell>
-                        <TableCell>
+              <>
+                <div className="hidden overflow-x-auto rounded-lg border md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>邮箱</TableHead>
+                        <TableHead>角色</TableHead>
+                        <TableHead>状态</TableHead>
+                        <TableHead>Credits</TableHead>
+                        <TableHead>注册时间</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentUsers.map((profile) => (
+                        <TableRow key={profile.id}>
+                          <TableCell className="min-w-[220px] font-medium">
+                            {profile.email}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
+                              {roleLabel(profile.role)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={statusVariant(profile.status)}>
+                              {statusLabel(profile.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatInteger(profile.credits)}</TableCell>
+                          <TableCell className="min-w-[140px] text-muted-foreground">
+                            {formatDate(profile.created_at)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="grid gap-3 md:hidden">
+                  {recentUsers.map((profile) => (
+                    <div key={profile.id} className="rounded-lg border bg-white p-4 shadow-sm">
+                      <div className="space-y-3">
+                        <p className="break-all text-sm font-medium">{profile.email}</p>
+                        <div className="flex flex-wrap gap-2">
                           <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
                             {roleLabel(profile.role)}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
                           <Badge variant={statusVariant(profile.status)}>
                             {statusLabel(profile.status)}
                           </Badge>
-                        </TableCell>
-                        <TableCell>{formatInteger(profile.credits)}</TableCell>
-                        <TableCell className="min-w-[140px] text-muted-foreground">
-                          {formatDate(profile.created_at)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                          <Badge variant="outline">{formatInteger(profile.credits)} credits</Badge>
+                        </div>
+                        <DetailRow label="注册时间">{formatDate(profile.created_at)}</DetailRow>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

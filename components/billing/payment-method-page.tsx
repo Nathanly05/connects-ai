@@ -35,7 +35,7 @@ function getMethod(value?: string): PaymentMethod | null {
 function PageHeader({ title, description }: { title: string; description: string }) {
   return (
     <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-      <div>
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <CreditCard className="size-5 text-primary" aria-hidden="true" />
           <h1 className="text-xl font-semibold tracking-normal">{title}</h1>
@@ -43,7 +43,7 @@ function PageHeader({ title, description }: { title: string; description: string
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" className="w-full sm:w-auto">
         <Link href="/chat">
           <MessageCircle aria-hidden="true" />
           返回聊天
@@ -99,7 +99,7 @@ function PaymentMethodChooser({ basePath }: { basePath: "/billing" | "/recharge"
 
 function StripePlans({ basePath }: { basePath: "/billing" | "/recharge" }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-w-0 flex-col gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-normal">Stripe 自动充值</h2>
@@ -107,7 +107,7 @@ function StripePlans({ basePath }: { basePath: "/billing" | "/recharge" }) {
             选择套餐后进入 Stripe Checkout，支付成功后 credits 自动到账。
           </p>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="w-full sm:w-auto">
           <Link href={basePath}>
             <ArrowLeft aria-hidden="true" />
             重新选择
@@ -155,7 +155,7 @@ function StripePlans({ basePath }: { basePath: "/billing" | "/recharge" }) {
 
 function GlobePayInstructions({ basePath }: { basePath: "/billing" | "/recharge" }) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-w-0 flex-col gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold tracking-normal">微信/支付宝扫码充值</h2>
@@ -163,7 +163,7 @@ function GlobePayInstructions({ basePath }: { basePath: "/billing" | "/recharge"
             扫码付款后由管理员审核到账，适合中国用户。
           </p>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="w-full sm:w-auto">
           <Link href={basePath}>
             <ArrowLeft aria-hidden="true" />
             重新选择
@@ -172,7 +172,7 @@ function GlobePayInstructions({ basePath }: { basePath: "/billing" | "/recharge"
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-        <Card>
+        <Card className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
           <CardHeader>
             <div className="mb-2 flex size-11 items-center justify-center rounded-md bg-primary/10 text-primary">
               <QrCode className="size-5" aria-hidden="true" />
@@ -181,7 +181,7 @@ function GlobePayInstructions({ basePath }: { basePath: "/billing" | "/recharge"
             <CardDescription>支持微信支付和支付宝。</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-hidden rounded-lg border bg-white p-3">
+            <div className="mx-auto max-w-xs overflow-hidden rounded-lg border bg-white p-3 sm:max-w-sm lg:max-w-none">
               <Image
                 src="/globepay.jpg"
                 alt="GlobePay 收款二维码"
@@ -245,8 +245,8 @@ export function PaymentMethodPage({
   const selectedMethod = getMethod(method);
 
   return (
-    <main className="page-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
-      <section className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+    <main className="page-shell min-h-screen px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-6 sm:gap-8">
         <PageHeader
           title="选择支付方式"
           description="可以选择 Stripe 自动充值，也可以使用 GlobePay 微信/支付宝扫码充值。"

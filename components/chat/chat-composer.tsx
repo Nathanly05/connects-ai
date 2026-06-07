@@ -26,6 +26,7 @@ type ChatComposerProps = {
   credits: number;
   disabled?: boolean;
   disabledMessage?: string;
+  showQuickPrompts?: boolean;
 };
 
 const chatModes: Array<{
@@ -45,6 +46,13 @@ const chatModes: Array<{
   }
 ];
 
+const quickPrompts = [
+  "写一篇小红书文案",
+  "帮我翻译成英文",
+  "帮我写一封邮件",
+  "帮我分析一个商业想法"
+];
+
 function SubmitButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
 
@@ -53,7 +61,7 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
       type="submit"
       disabled={disabled || pending}
       size="icon"
-      className="size-10 shrink-0 rounded-full"
+      className="size-9 shrink-0 rounded-full sm:size-10"
       aria-label={pending ? "发送中" : "发送"}
     >
       <SendHorizontal aria-hidden="true" />
@@ -65,7 +73,8 @@ export function ChatComposer({
   sessionId,
   credits,
   disabled,
-  disabledMessage
+  disabledMessage,
+  showQuickPrompts
 }: ChatComposerProps) {
   const [mode, setMode] = useState<ChatMode>("instant");
   const [content, setContent] = useState("");
@@ -85,7 +94,10 @@ export function ChatComposer({
         : null;
 
   return (
-    <form action={sendMessageAction} className="border-t bg-white p-3 sm:p-4">
+    <form
+      action={sendMessageAction}
+      className="sticky bottom-0 z-10 border-t bg-white p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-4"
+    >
       <input type="hidden" name="sessionId" value={sessionId ?? ""} />
       <input type="hidden" name="mode" value={mode} />
       <div className="flex flex-col gap-3">
@@ -160,13 +172,13 @@ export function ChatComposer({
             className="min-h-[92px] resize-none border-0 bg-transparent px-3 py-3 shadow-none focus-visible:ring-0 disabled:bg-transparent"
           />
 
-          <div className="flex items-center justify-between gap-3 px-1 pb-1">
+          <div className="flex items-center justify-between gap-2 px-1 pb-1">
             <div className="relative">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="size-10 shrink-0 rounded-full bg-white"
+                className="size-9 shrink-0 rounded-full bg-white sm:size-10"
                 aria-label="添加"
                 aria-expanded={isPlusMenuOpen}
                 aria-haspopup="menu"
@@ -236,12 +248,12 @@ export function ChatComposer({
               ) : null}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <div className="relative">
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-full bg-white px-4"
+                  className="h-9 max-w-[112px] rounded-full bg-white px-3 text-sm sm:h-10 sm:max-w-none sm:px-4"
                   onClick={() => {
                     setIsModelMenuOpen((open) => !open);
                     setIsPlusMenuOpen(false);
@@ -297,7 +309,7 @@ export function ChatComposer({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="size-10 shrink-0 rounded-full bg-white"
+                className="size-9 shrink-0 rounded-full bg-white sm:size-10"
                 aria-label="语音输入"
                 onClick={() => {
                   setNotice("语音输入功能即将上线");
@@ -311,7 +323,7 @@ export function ChatComposer({
               <Button
                 type="button"
                 size="icon"
-                className="size-10 shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/90"
+                className="size-9 shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/90 sm:size-10"
                 aria-label="实时语音对话"
                 onClick={() => {
                   setNotice("实时语音对话功能即将上线");
@@ -326,6 +338,27 @@ export function ChatComposer({
             </div>
           </div>
         </div>
+
+        {showQuickPrompts ? (
+          <div className="grid gap-2 px-1 sm:grid-cols-2 lg:grid-cols-4">
+            {quickPrompts.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                className="rounded-full border bg-white px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={cannotSend}
+                onClick={() => {
+                  setContent(prompt);
+                  setNotice(null);
+                  setIsPlusMenuOpen(false);
+                  setIsModelMenuOpen(false);
+                }}
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         <p className="px-2 text-xs leading-5 text-muted-foreground">
           Instant 每次 1 credit，Thinking 每次 5 credits。
