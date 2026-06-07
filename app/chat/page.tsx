@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import {
   AlertTriangle,
   CreditCard,
+  LifeBuoy,
   MessageCircle,
   Plus,
   QrCode
@@ -134,6 +135,12 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
+              <Link href="/support">
+                <LifeBuoy aria-hidden="true" />
+                联系客服 / 反馈问题
+              </Link>
+            </Button>
             <MobileChatHistoryDrawer
               sessions={sessions}
               selectedSessionId={selectedSessionId}

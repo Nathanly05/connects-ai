@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   CreditCard,
+  LifeBuoy,
   LogOut,
   MessageCircle,
   QrCode,
@@ -292,6 +293,12 @@ export default async function AccountPage() {
                 <Link href="/recharge?method=globepay">
                   <QrCode aria-hidden="true" />
                   微信/支付宝充值
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link href="/support">
+                  <LifeBuoy aria-hidden="true" />
+                  联系客服 / 反馈问题
                 </Link>
               </Button>
               <form action={signOutAction}>

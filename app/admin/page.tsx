@@ -7,6 +7,7 @@ import {
   Clock3,
   Coins,
   CreditCard,
+  LifeBuoy,
   MessageCircle,
   MessageSquareText,
   ReceiptText,
@@ -354,6 +355,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button asChild variant="secondary" className="w-full sm:w-auto">
+              <Link href="/admin/support">
+                <LifeBuoy aria-hidden="true" />
+                反馈工单
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href="/admin/recharges">
                 <ReceiptText aria-hidden="true" />
                 充值申请

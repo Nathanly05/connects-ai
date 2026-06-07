@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Check, CreditCard, QrCode } from "lucide-react";
+import { ArrowLeft, Check, CreditCard, LifeBuoy, QrCode } from "lucide-react";
 import { createCheckoutSessionAction } from "@/app/billing/actions";
 import { AppNav } from "@/components/layout/app-nav";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,15 @@ function getMethod(value?: string): PaymentMethod | null {
   return null;
 }
 
-function PageHeader({ title, description }: { title: string; description: string }) {
+function PageHeader({
+  title,
+  description,
+  showSupportLink = false
+}: {
+  title: string;
+  description: string;
+  showSupportLink?: boolean;
+}) {
   return (
     <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
@@ -44,6 +52,14 @@ function PageHeader({ title, description }: { title: string; description: string
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
+      {showSupportLink ? (
+        <Button asChild variant="outline" className="w-full sm:w-auto">
+          <Link href="/support">
+            <LifeBuoy aria-hidden="true" />
+            联系客服 / 反馈问题
+          </Link>
+        </Button>
+      ) : null}
     </header>
   );
 }
@@ -256,6 +272,7 @@ export function PaymentMethodPage({
         <PageHeader
           title="选择支付方式"
           description="可以选择 Stripe 自动充值，也可以使用 GlobePay 微信/支付宝扫码充值。"
+          showSupportLink={basePath === "/billing"}
         />
 
         {!selectedMethod ? <PaymentMethodChooser basePath={basePath} /> : null}

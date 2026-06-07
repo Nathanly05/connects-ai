@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
-type AppNavItem = "chat" | "billing" | "recharge" | "account" | "admin";
+type AppNavItem = "chat" | "billing" | "recharge" | "account" | "support" | "admin";
 
 type AppNavProps = {
   active: AppNavItem;
@@ -31,7 +31,8 @@ const baseLinks: Array<{
   { key: "chat", label: "Chat", href: "/chat" },
   { key: "billing", label: "Billing", href: "/billing" },
   { key: "recharge", label: "Recharge", href: "/recharge" },
-  { key: "account", label: "Account", href: "/account" }
+  { key: "account", label: "Account", href: "/account" },
+  { key: "support", label: "Support", href: "/support" }
 ];
 
 function initialsFromEmail(email: string) {
