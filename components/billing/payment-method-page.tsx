@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Check, CreditCard, MessageCircle, QrCode } from "lucide-react";
+import { ArrowLeft, Check, CreditCard, QrCode } from "lucide-react";
 import { createCheckoutSessionAction } from "@/app/billing/actions";
+import { AppNav } from "@/components/layout/app-nav";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,12 +44,6 @@ function PageHeader({ title, description }: { title: string; description: string
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
-      <Button asChild variant="outline" className="w-full sm:w-auto">
-        <Link href="/chat">
-          <MessageCircle aria-hidden="true" />
-          返回聊天
-        </Link>
-      </Button>
     </header>
   );
 }
@@ -247,6 +242,8 @@ export function PaymentMethodPage({
   return (
     <main className="page-shell min-h-screen px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
       <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-6 sm:gap-8">
+        <AppNav active={basePath === "/billing" ? "billing" : "recharge"} />
+
         <PageHeader
           title="选择支付方式"
           description="可以选择 Stripe 自动充值，也可以使用 GlobePay 微信/支付宝扫码充值。"

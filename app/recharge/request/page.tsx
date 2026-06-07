@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ReceiptText } from "lucide-react";
 import { submitGlobePayRechargeRequestAction } from "@/app/recharge/request/actions";
+import { AppNav } from "@/components/layout/app-nav";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,8 @@ export default async function RechargeRequestPage({
   return (
     <main className="page-shell min-h-screen px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
       <section className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-6">
+        <AppNav active="recharge" />
+
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">

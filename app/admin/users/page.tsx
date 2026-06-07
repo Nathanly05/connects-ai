@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { ShieldCheck, UsersRound } from "lucide-react";
 import { UserActionControls } from "@/components/admin/user-action-controls";
+import { AppNav } from "@/components/layout/app-nav";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -140,6 +141,8 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
   return (
     <main className="page-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <AppNav active="admin" />
+
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">

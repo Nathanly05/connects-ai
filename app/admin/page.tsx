@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { AppNav } from "@/components/layout/app-nav";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -317,6 +318,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   return (
     <main className="page-shell min-h-screen px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <AppNav active="admin" />
+
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">

@@ -5,14 +5,12 @@ import {
   CreditCard,
   MessageCircle,
   Plus,
-  QrCode,
-  UserCircle,
-  WalletCards
+  QrCode
 } from "lucide-react";
-import { signOutAction } from "@/app/auth/actions";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { MobileChatHistoryDrawer } from "@/components/chat/mobile-chat-history-drawer";
+import { AppNav } from "@/components/layout/app-nav";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -115,6 +113,8 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
   return (
     <main className="page-shell min-h-screen px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <AppNav active="chat" />
+
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -132,52 +132,6 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
               selectedSessionId={selectedSessionId}
               sessionsError={sessionsError?.message ?? null}
             />
-            <div
-              className={cn(
-                "inline-flex items-center gap-3 rounded-md border bg-white px-4 py-3 shadow-sm",
-                isLowCredits && "border-amber-300 bg-amber-50",
-                isOutOfCredits && "border-destructive/30 bg-destructive/10"
-              )}
-            >
-              <div
-                className={cn(
-                  "flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary",
-                  isLowCredits && "bg-amber-100 text-amber-700",
-                  isOutOfCredits && "bg-destructive/10 text-destructive"
-                )}
-              >
-                <WalletCards className="size-5" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">当前余额</p>
-                <p className="text-base font-semibold tracking-normal">
-                  当前余额：{credits} Credits
-                </p>
-              </div>
-            </div>
-            <Button asChild>
-              <Link href="/billing">
-                <CreditCard aria-hidden="true" />
-                Stripe 自动充值
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/account">
-                <UserCircle aria-hidden="true" />
-                账户
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/recharge?method=globepay">
-                <QrCode aria-hidden="true" />
-                微信/支付宝充值
-              </Link>
-            </Button>
-            <form action={signOutAction}>
-              <Button type="submit" variant="outline" className="w-full sm:w-auto">
-                退出登录
-              </Button>
-            </form>
           </div>
         </header>
 
