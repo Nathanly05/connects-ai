@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ShieldCheck, UsersRound } from "lucide-react";
+import { RotateCcw, Search, ShieldCheck, UsersRound } from "lucide-react";
 import { UserActionControls } from "@/components/admin/user-action-controls";
 import { AppNav } from "@/components/layout/app-nav";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,6 +13,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { PageToast } from "@/components/ui/page-toast";
 import {
   Table,
@@ -45,8 +47,14 @@ type UsersPageProps = {
   searchParams: Promise<{
     success?: string;
     error?: string;
+    q?: string;
+    status?: string;
+    role?: string;
   }>;
 };
+
+type StatusFilter = "all" | ProfileStatus;
+type RoleFilter = "all" | ProfileRole;
 
 function statusPath(status?: ProfileStatus | null) {
   if (status === "rejected") {
@@ -106,6 +114,22 @@ function SummaryItem({ label, value }: { label: string; value: number }) {
   );
 }
 
+function getStatusFilter(value?: string): StatusFilter {
+  if (value === "pending" || value === "approved" || value === "rejected") {
+    return value;
+  }
+
+  return "all";
+}
+
+function getRoleFilter(value?: string): RoleFilter {
+  if (value === "user" || value === "admin") {
+    return value;
+  }
+
+  return "all";
+}
+
 export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -134,10 +158,29 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
     redirect("/chat");
   }
 
-  const { data, error } = await supabase
+  const searchQuery = params.q?.trim() ?? "";
+  const statusFilter = getStatusFilter(params.status);
+  const roleFilter = getRoleFilter(params.role);
+  const hasFilters = Boolean(searchQuery) || statusFilter !== "all" || roleFilter !== "all";
+
+  let usersQuery = supabase
     .from("profiles")
     .select("id, email, role, status, credits, created_at")
     .order("created_at", { ascending: false });
+
+  if (searchQuery) {
+    usersQuery = usersQuery.ilike("email", `%${searchQuery}%`);
+  }
+
+  if (statusFilter !== "all") {
+    usersQuery = usersQuery.eq("status", statusFilter);
+  }
+
+  if (roleFilter !== "all") {
+    usersQuery = usersQuery.eq("role", roleFilter);
+  }
+
+  const { data, error } = await usersQuery;
 
   const users = (data ?? []) as Profile[];
   const pendingCount = users.filter((profile) => profile.status === "pending").length;
@@ -172,7 +215,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
           <SummaryItem label="已拒绝" value={rejectedCount} />
         </div>
 
-        {pendingCount === 0 ? (
+        {!hasFilters && pendingCount === 0 ? (
           <Alert>
             <AlertDescription>暂无待审核用户。</AlertDescription>
           </Alert>
@@ -185,10 +228,55 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             </div>
             <CardTitle>用户列表</CardTitle>
             <CardDescription>
-              共 {users.length} 个用户。批准 pending 用户会调用数据库函数并自动增加 50 credits。
+              当前结果 {users.length} 个用户。批准 pending 用户会调用数据库函数并自动增加 50 credits。
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <form
+              action="/admin/users"
+              className="mb-5 grid gap-3 rounded-lg border bg-secondary/40 p-3 sm:grid-cols-[minmax(0,1fr)_180px_160px_auto_auto]"
+            >
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" aria-hidden="true" />
+                <Input
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="按邮箱搜索用户"
+                  className="pl-9"
+                />
+              </div>
+              <select
+                name="status"
+                defaultValue={statusFilter}
+                className="h-11 rounded-md border border-input bg-white px-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                aria-label="按状态筛选"
+              >
+                <option value="all">全部状态</option>
+                <option value="pending">pending</option>
+                <option value="approved">approved</option>
+                <option value="rejected">rejected</option>
+              </select>
+              <select
+                name="role"
+                defaultValue={roleFilter}
+                className="h-11 rounded-md border border-input bg-white px-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                aria-label="按角色筛选"
+              >
+                <option value="all">全部角色</option>
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+              </select>
+              <Button type="submit" className="w-full">
+                搜索
+              </Button>
+              <Button asChild variant="outline" className="w-full bg-white">
+                <a href="/admin/users">
+                  <RotateCcw aria-hidden="true" />
+                  重置
+                </a>
+              </Button>
+            </form>
+
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>用户列表暂时无法加载，请稍后重试。</AlertDescription>

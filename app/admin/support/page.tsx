@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { LifeBuoy } from "lucide-react";
+import { LifeBuoy, RotateCcw, Search } from "lucide-react";
 import { updateSupportTicketStatusAction } from "@/app/admin/support/actions";
 import { AppNav } from "@/components/layout/app-nav";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { PageToast } from "@/components/ui/page-toast";
 import {
   Table,
@@ -50,8 +51,14 @@ type AdminSupportPageProps = {
   searchParams: Promise<{
     success?: string;
     error?: string;
+    q?: string;
+    status?: string;
+    type?: string;
   }>;
 };
+
+type TicketStatusFilter = "all" | TicketStatus;
+type TicketTypeFilter = "all" | "账号问题" | "充值问题" | "AI回复问题" | "Credits问题" | "其他";
 
 const ticketStatuses: Array<{
   value: TicketStatus;
@@ -60,6 +67,18 @@ const ticketStatuses: Array<{
   { value: "open", label: "open" },
   { value: "in_progress", label: "in_progress" },
   { value: "resolved", label: "resolved" }
+];
+
+const ticketTypes: Array<{
+  value: TicketTypeFilter;
+  label: string;
+}> = [
+  { value: "all", label: "全部类型" },
+  { value: "账号问题", label: "账号问题" },
+  { value: "充值问题", label: "充值问题" },
+  { value: "AI回复问题", label: "AI回复问题" },
+  { value: "Credits问题", label: "Credits问题" },
+  { value: "其他", label: "其他" }
 ];
 
 function statusPath(status?: ProfileStatus | null) {
@@ -104,6 +123,28 @@ function SummaryItem({ label, value }: { label: string; value: number }) {
       <p className="mt-1 text-2xl font-semibold tracking-normal">{value}</p>
     </div>
   );
+}
+
+function getTicketStatusFilter(value?: string): TicketStatusFilter {
+  if (value === "open" || value === "in_progress" || value === "resolved") {
+    return value;
+  }
+
+  return "all";
+}
+
+function getTicketTypeFilter(value?: string): TicketTypeFilter {
+  if (
+    value === "账号问题" ||
+    value === "充值问题" ||
+    value === "AI回复问题" ||
+    value === "Credits问题" ||
+    value === "其他"
+  ) {
+    return value;
+  }
+
+  return "all";
 }
 
 function StatusForm({ ticket }: { ticket: SupportTicket }) {
@@ -159,10 +200,28 @@ export default async function AdminSupportPage({
     redirect("/chat");
   }
 
-  const { data, error } = await supabase
+  const searchQuery = params.q?.trim() ?? "";
+  const statusFilter = getTicketStatusFilter(params.status);
+  const typeFilter = getTicketTypeFilter(params.type);
+
+  let ticketsQuery = supabase
     .from("support_tickets")
     .select("id, user_id, email, type, title, message, contact, status, created_at")
     .order("created_at", { ascending: false });
+
+  if (searchQuery) {
+    ticketsQuery = ticketsQuery.ilike("email", `%${searchQuery}%`);
+  }
+
+  if (statusFilter !== "all") {
+    ticketsQuery = ticketsQuery.eq("status", statusFilter);
+  }
+
+  if (typeFilter !== "all") {
+    ticketsQuery = ticketsQuery.eq("type", typeFilter);
+  }
+
+  const { data, error } = await ticketsQuery;
 
   const tickets = (data ?? []) as SupportTicket[];
   const openCount = tickets.filter((ticket) => ticket.status === "open").length;
@@ -200,9 +259,56 @@ export default async function AdminSupportPage({
         <Card>
           <CardHeader>
             <CardTitle>反馈列表</CardTitle>
-            <CardDescription>共 {tickets.length} 条反馈。</CardDescription>
+            <CardDescription>当前结果 {tickets.length} 条反馈。</CardDescription>
           </CardHeader>
           <CardContent>
+            <form
+              action="/admin/support"
+              className="mb-5 grid gap-3 rounded-lg border bg-secondary/40 p-3 lg:grid-cols-[minmax(0,1fr)_180px_180px_auto_auto]"
+            >
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" aria-hidden="true" />
+                <Input
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="按邮箱搜索反馈"
+                  className="pl-9"
+                />
+              </div>
+              <select
+                name="status"
+                defaultValue={statusFilter}
+                className="h-11 rounded-md border border-input bg-white px-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                aria-label="按状态筛选"
+              >
+                <option value="all">全部状态</option>
+                <option value="open">open</option>
+                <option value="in_progress">in_progress</option>
+                <option value="resolved">resolved</option>
+              </select>
+              <select
+                name="type"
+                defaultValue={typeFilter}
+                className="h-11 rounded-md border border-input bg-white px-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                aria-label="按问题类型筛选"
+              >
+                {ticketTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+              <Button type="submit" className="w-full">
+                搜索
+              </Button>
+              <Button asChild variant="outline" className="w-full bg-white">
+                <a href="/admin/support">
+                  <RotateCcw aria-hidden="true" />
+                  重置
+                </a>
+              </Button>
+            </form>
+
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>反馈列表暂时无法加载，请稍后重试。</AlertDescription>

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ReceiptText } from "lucide-react";
+import { ReceiptText, RotateCcw, Search } from "lucide-react";
 import { RechargeReviewActions } from "@/components/admin/recharge-review-actions";
 import { AppNav } from "@/components/layout/app-nav";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,6 +13,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { PageToast } from "@/components/ui/page-toast";
 import {
   Table,
@@ -53,8 +55,12 @@ type AdminRechargesPageProps = {
   searchParams: Promise<{
     success?: string;
     error?: string;
+    q?: string;
+    status?: string;
   }>;
 };
+
+type RechargeStatusFilter = "all" | RechargeStatus;
 
 function statusPath(status?: ProfileStatus | null) {
   if (status === "rejected") {
@@ -114,6 +120,14 @@ function SummaryItem({ label, value }: { label: string; value: number }) {
   );
 }
 
+function getRechargeStatusFilter(value?: string): RechargeStatusFilter {
+  if (value === "pending" || value === "approved" || value === "rejected") {
+    return value;
+  }
+
+  return "all";
+}
+
 export default async function AdminRechargesPage({
   searchParams
 }: AdminRechargesPageProps) {
@@ -144,12 +158,25 @@ export default async function AdminRechargesPage({
     redirect("/chat");
   }
 
-  const { data, error } = await supabase
+  const searchQuery = params.q?.trim() ?? "";
+  const statusFilter = getRechargeStatusFilter(params.status);
+
+  let requestsQuery = supabase
     .from("recharge_requests")
     .select(
       "id, user_id, email, package_name, amount, payment_time, remark, screenshot_url, status, created_at, reviewed_at, reviewed_by, reject_reason"
     )
     .order("created_at", { ascending: false });
+
+  if (searchQuery) {
+    requestsQuery = requestsQuery.ilike("email", `%${searchQuery}%`);
+  }
+
+  if (statusFilter !== "all") {
+    requestsQuery = requestsQuery.eq("status", statusFilter);
+  }
+
+  const { data, error } = await requestsQuery;
 
   const requests = (data ?? []) as RechargeRequest[];
   const pendingCount = requests.filter((request) => request.status === "pending").length;
@@ -187,9 +214,44 @@ export default async function AdminRechargesPage({
         <Card>
           <CardHeader>
             <CardTitle>充值申请</CardTitle>
-            <CardDescription>共 {requests.length} 条申请。</CardDescription>
+            <CardDescription>当前结果 {requests.length} 条申请。</CardDescription>
           </CardHeader>
           <CardContent>
+            <form
+              action="/admin/recharges"
+              className="mb-5 grid gap-3 rounded-lg border bg-secondary/40 p-3 sm:grid-cols-[minmax(0,1fr)_180px_auto_auto]"
+            >
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" aria-hidden="true" />
+                <Input
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="按邮箱搜索充值申请"
+                  className="pl-9"
+                />
+              </div>
+              <select
+                name="status"
+                defaultValue={statusFilter}
+                className="h-11 rounded-md border border-input bg-white px-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                aria-label="按状态筛选"
+              >
+                <option value="all">全部状态</option>
+                <option value="pending">pending</option>
+                <option value="approved">approved</option>
+                <option value="rejected">rejected</option>
+              </select>
+              <Button type="submit" className="w-full">
+                搜索
+              </Button>
+              <Button asChild variant="outline" className="w-full bg-white">
+                <a href="/admin/recharges">
+                  <RotateCcw aria-hidden="true" />
+                  重置
+                </a>
+              </Button>
+            </form>
+
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>充值申请暂时无法加载，请稍后重试。</AlertDescription>
