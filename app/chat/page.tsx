@@ -272,7 +272,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
                     : "新对话"}
                 </CardTitle>
                 <CardDescription>
-                  每发送一次消息扣除 1 credit，余额不足时无法继续聊天。
+                  Instant 每次 1 credit，Thinking 每次 5 credits。
                 </CardDescription>
               </CardHeader>
               {messagesError ? (
@@ -288,6 +288,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
               )}
               <ChatComposer
                 sessionId={selectedSessionId}
+                credits={credits}
                 disabled={isOutOfCredits}
                 disabledMessage="Credits 已用完，请充值后继续使用。"
               />

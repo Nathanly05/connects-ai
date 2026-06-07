@@ -10,9 +10,24 @@ type ChatMessage = {
   content: string;
 };
 
+type ChatMode = "instant" | "thinking";
+
+const chatModeCosts: Record<ChatMode, number> = {
+  instant: 1,
+  thinking: 5
+};
+
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+function getChatMode(value: string): ChatMode {
+  return value === "thinking" ? "thinking" : "instant";
+}
+
+function chatModeLabel(mode: ChatMode) {
+  return mode === "thinking" ? "Thinking" : "Instant";
 }
 
 function redirectWithChatError(sessionId: string | null, message: string): never {
@@ -65,6 +80,8 @@ function friendlyError(error: unknown) {
 export async function sendMessageAction(formData: FormData) {
   const sessionId = getString(formData, "sessionId") || null;
   const content = getString(formData, "content");
+  const mode = getChatMode(getString(formData, "mode"));
+  const creditCost = chatModeCosts[mode];
 
   if (!content) {
     redirectWithChatError(sessionId, "请输入消息内容。");
@@ -93,8 +110,17 @@ export async function sendMessageAction(formData: FormData) {
     redirect("/auth/pending");
   }
 
-  if ((profile?.credits ?? 0) <= 0) {
+  const currentCredits = profile?.credits ?? 0;
+
+  if (currentCredits <= 0) {
     redirectWithChatError(sessionId, "Credits 已用完，请充值后继续使用。");
+  }
+
+  if (currentCredits < creditCost) {
+    redirectWithChatError(
+      sessionId,
+      `${chatModeLabel(mode)} 模式需要 ${creditCost} Credits，当前余额不足。`
+    );
   }
 
   let previousMessages: ChatMessage[] = [];
@@ -149,7 +175,8 @@ export async function sendMessageAction(formData: FormData) {
     p_session_id: sessionId,
     p_user_content: content,
     p_assistant_content: assistantContent,
-    p_title: titleFromMessage(content)
+    p_title: titleFromMessage(content),
+    p_mode: mode
   });
 
   if (saveError) {
