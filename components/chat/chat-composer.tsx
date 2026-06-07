@@ -90,7 +90,7 @@ export function ChatComposer({
     disabled && disabledMessage
       ? disabledMessage
       : modeInsufficient
-        ? `${selectedMode.label} 模式需要 ${selectedMode.cost} Credits，当前余额不足。`
+        ? "Credits 不足，请充值后继续使用。"
         : null;
 
   return (
@@ -166,7 +166,7 @@ export function ChatComposer({
             name="content"
             value={content}
             onChange={(event) => setContent(event.target.value)}
-            placeholder={cannotSend ? "余额不足，请先充值或切换模式。" : "输入你的问题..."}
+            placeholder={cannotSend ? "Credits 不足，请充值后继续使用。" : "输入你的问题..."}
             disabled={cannotSend}
             required
             className="min-h-[92px] resize-none border-0 bg-transparent px-3 py-3 shadow-none focus-visible:ring-0 disabled:bg-transparent"

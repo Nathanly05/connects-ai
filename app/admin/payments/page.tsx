@@ -168,15 +168,13 @@ export default async function AdminPaymentsPage() {
           <CardContent>
             {error ? (
               <Alert variant="destructive">
-                <AlertDescription>
-                  读取支付订单失败：{error.message}
-                </AlertDescription>
+                <AlertDescription>支付订单暂时无法加载，请稍后重试。</AlertDescription>
               </Alert>
             ) : null}
 
             {!error && orders.length === 0 ? (
               <div className="rounded-lg border bg-secondary/50 px-4 py-10 text-center text-sm text-muted-foreground">
-                暂时没有 Stripe 支付订单。
+                暂无 Stripe 支付订单。
               </div>
             ) : null}
 

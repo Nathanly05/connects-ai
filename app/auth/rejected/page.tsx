@@ -21,7 +21,7 @@ export default function RejectedPage() {
           </div>
           <CardTitle>申请未通过</CardTitle>
           <CardDescription>
-            账号申请未通过，如需帮助请联系管理员微信：wishmelucky555
+            账号申请未通过，如需帮助请联系管理员。
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">

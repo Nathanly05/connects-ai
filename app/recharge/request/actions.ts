@@ -77,7 +77,7 @@ export async function submitGlobePayRechargeRequestAction(formData: FormData) {
   });
 
   if (error) {
-    redirectWithMessage("error", `提交充值申请失败：${error.message}`);
+    redirectWithMessage("error", "提交失败，请稍后重试或联系管理员。");
   }
 
   redirectWithMessage("success", "您的充值申请已提交，请等待管理员审核。");

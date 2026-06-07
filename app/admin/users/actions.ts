@@ -38,10 +38,10 @@ function friendlyError(message?: string) {
   }
 
   if (message.includes("function public.admin_remove_credits")) {
-    return "数据库还没有 admin_remove_credits 函数，请先运行本阶段提供的 SQL。";
+    return "Credits 操作暂时不可用，请稍后再试。";
   }
 
-  return message;
+  return "操作失败，请稍后再试。";
 }
 
 export async function approveUserAction(formData: FormData) {

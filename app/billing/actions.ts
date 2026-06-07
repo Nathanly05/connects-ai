@@ -15,6 +15,10 @@ function redirectWithError(message: string): never {
   redirect(`/billing?error=${encodeURIComponent(message)}`);
 }
 
+function redirectWithPaymentError(): never {
+  redirectWithError("支付暂时无法发起，请稍后再试。");
+}
+
 export async function createCheckoutSessionAction(formData: FormData) {
   const plan = getBillingPlan(getString(formData, "planId"));
   const supabase = await createClient();
@@ -33,7 +37,7 @@ export async function createCheckoutSessionAction(formData: FormData) {
     .maybeSingle();
 
   if (profileError) {
-    redirectWithError("读取账号状态失败，请稍后重试。");
+    redirectWithPaymentError();
   }
 
   if (profile?.status !== "approved") {
@@ -47,7 +51,7 @@ export async function createCheckoutSessionAction(formData: FormData) {
     "http://localhost:3000";
 
   let checkoutUrl: string | null = null;
-  let errorMessage: string | null = null;
+  let hasError = false;
 
   try {
     const stripe = createStripeClient();
@@ -86,20 +90,20 @@ export async function createCheckoutSessionAction(formData: FormData) {
     });
 
     if (insertError) {
-      errorMessage = `创建支付订单失败：${insertError.message}`;
+      hasError = true;
     } else {
       checkoutUrl = session.url;
     }
-  } catch (error) {
-    errorMessage = error instanceof Error ? error.message : "创建 Stripe Checkout 失败。";
+  } catch {
+    hasError = true;
   }
 
-  if (errorMessage) {
-    redirectWithError(errorMessage);
+  if (hasError) {
+    redirectWithPaymentError();
   }
 
   if (!checkoutUrl) {
-    redirectWithError("Stripe Checkout 没有返回支付链接。");
+    redirectWithPaymentError();
   }
 
   redirect(checkoutUrl);

@@ -60,7 +60,7 @@ export async function submitRechargeRequestAction(formData: FormData) {
     });
 
   if (uploadError) {
-    redirectWithMessage("error", `上传付款截图失败：${uploadError.message}`);
+    redirectWithMessage("error", "提交失败，请稍后重试或联系管理员。");
   }
 
   const { data: publicUrlData } = supabase.storage
@@ -77,7 +77,7 @@ export async function submitRechargeRequestAction(formData: FormData) {
   });
 
   if (insertError) {
-    redirectWithMessage("error", `提交充值申请失败：${insertError.message}`);
+    redirectWithMessage("error", "提交失败，请稍后重试或联系管理员。");
   }
 
   redirectWithMessage("success", "充值申请已提交，请等待管理员审核。");

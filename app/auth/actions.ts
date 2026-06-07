@@ -17,11 +17,19 @@ function authErrorMessage(message: string) {
     return "邮箱或密码不正确，请重新输入。";
   }
 
+  if (
+    lowerMessage.includes("email not confirmed") ||
+    lowerMessage.includes("email_not_confirmed") ||
+    lowerMessage.includes("not confirmed")
+  ) {
+    return "请先验证邮箱后再登录。";
+  }
+
   if (lowerMessage.includes("already registered") || lowerMessage.includes("already exists")) {
     return "这个邮箱可能已经注册，请直接登录。";
   }
 
-  return message || "操作失败，请稍后再试。";
+  return "操作失败，请稍后再试。";
 }
 
 function redirectWithError(path: string, message: string): never {
@@ -90,7 +98,7 @@ export async function signInAction(formData: FormData) {
     .maybeSingle();
 
   if (profileError) {
-    redirectWithError("/auth/login", "登录成功，但读取账号审核状态失败。请稍后重试。");
+    redirectWithError("/auth/login", "账号状态暂时无法确认，请稍后再试。");
   }
 
   redirectByStatus(profile?.status as ProfileStatus | undefined);

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowLeft, Check, CreditCard, QrCode } from "lucide-react";
 import { createCheckoutSessionAction } from "@/app/billing/actions";
 import { AppNav } from "@/components/layout/app-nav";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { PageToast } from "@/components/ui/page-toast";
 import { billingPlans } from "@/lib/billing-plans";
 
 type PaymentMethod = "stripe" | "globepay";
@@ -238,36 +238,25 @@ export function PaymentMethodPage({
   error
 }: PaymentMethodPageProps) {
   const selectedMethod = getMethod(method);
+  const toastMessage = error
+    ? error
+    : success
+      ? "支付已完成。Stripe webhook 处理后 credits 会自动到账。"
+      : canceled
+        ? "支付已取消，可以重新选择套餐。"
+        : null;
+  const toastVariant = error ? "error" : canceled ? "info" : "success";
 
   return (
     <main className="page-shell min-h-screen px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
       <section className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-6 sm:gap-8">
         <AppNav active={basePath === "/billing" ? "billing" : "recharge"} />
+        <PageToast message={toastMessage} variant={toastVariant} />
 
         <PageHeader
           title="选择支付方式"
           description="可以选择 Stripe 自动充值，也可以使用 GlobePay 微信/支付宝扫码充值。"
         />
-
-        {success ? (
-          <Alert className="border-primary/20 bg-primary/10 text-primary">
-            <AlertDescription>
-              支付已完成。Stripe webhook 处理后 credits 会自动到账。
-            </AlertDescription>
-          </Alert>
-        ) : null}
-
-        {canceled ? (
-          <Alert>
-            <AlertDescription>支付已取消，可以重新选择套餐。</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {error ? (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : null}
 
         {!selectedMethod ? <PaymentMethodChooser basePath={basePath} /> : null}
         {selectedMethod === "stripe" ? <StripePlans basePath={basePath} /> : null}

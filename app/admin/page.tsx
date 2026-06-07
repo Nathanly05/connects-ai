@@ -34,6 +34,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { PageToast } from "@/components/ui/page-toast";
 import { AppNav } from "@/components/layout/app-nav";
 import { createClient } from "@/lib/supabase/server";
 
@@ -74,6 +75,12 @@ type CreditLog = {
 
 type PaymentAmount = {
   amount_gbp: number | string | null;
+};
+
+type MessageUsage = {
+  user_id: string;
+  message_count: number;
+  rate_limited_count: number;
 };
 
 type AdminPageProps = {
@@ -240,10 +247,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayStartIso = todayStart.toISOString();
+  const todayDate = new Date().toISOString().slice(0, 10);
 
   const [
     profilesResult,
-    todayMessagesResult,
+    todayUsageResult,
     todayStripeOrdersResult,
     pendingRechargeResult,
     recentRechargesResult,
@@ -254,9 +262,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       .select("id, email, role, status, credits, created_at")
       .order("created_at", { ascending: false }),
     supabase
-      .from("chat_messages")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", todayStartIso),
+      .from("message_usage")
+      .select("user_id, message_count, rate_limited_count")
+      .eq("date", todayDate),
     supabase
       .from("payment_orders")
       .select("amount_gbp")
@@ -282,6 +290,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const recentRecharges = (recentRechargesResult.data ?? []) as RechargeRequest[];
   const recentCreditLogs = (recentCreditLogsResult.data ?? []) as CreditLog[];
   const recentUsers = users.slice(0, 10);
+  const todayUsageRows = (todayUsageResult.data ?? []) as MessageUsage[];
   const emailByUserId = new Map(users.map((profile) => [profile.id, profile.email]));
 
   const pendingCount = users.filter((profile) => profile.status === "pending").length;
@@ -295,30 +304,37 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     (total, order) => total + Number(order.amount_gbp ?? 0),
     0
   );
+  const todayMessageCount = todayUsageRows.reduce(
+    (total, row) => total + Number(row.message_count ?? 0),
+    0
+  );
+  const todayActiveUsers = new Set(
+    todayUsageRows
+      .filter((row) => Number(row.message_count ?? 0) > 0)
+      .map((row) => row.user_id)
+  ).size;
+  const todayRateLimitedCount = todayUsageRows.reduce(
+    (total, row) => total + Number(row.rate_limited_count ?? 0),
+    0
+  );
 
   const dashboardErrors = [
-    profilesResult.error ? `读取用户数据失败：${profilesResult.error.message}` : null,
-    todayMessagesResult.error
-      ? `读取今日聊天消息数失败：${todayMessagesResult.error.message}`
-      : null,
-    todayStripeOrdersResult.error
-      ? `读取今日 Stripe 充值金额失败：${todayStripeOrdersResult.error.message}`
-      : null,
-    pendingRechargeResult.error
-      ? `读取待审核 GlobePay 申请数失败：${pendingRechargeResult.error.message}`
-      : null,
-    recentRechargesResult.error
-      ? `读取最近充值申请失败：${recentRechargesResult.error.message}`
-      : null,
-    recentCreditLogsResult.error
-      ? `读取最近 Credits 变动失败：${recentCreditLogsResult.error.message}`
-      : null
+    profilesResult.error ? "用户数据暂时无法加载，请稍后重试。" : null,
+    todayUsageResult.error ? "今日使用统计暂时无法加载，请稍后重试。" : null,
+    todayStripeOrdersResult.error ? "今日 Stripe 数据暂时无法加载，请稍后重试。" : null,
+    pendingRechargeResult.error ? "GlobePay 申请数据暂时无法加载，请稍后重试。" : null,
+    recentRechargesResult.error ? "最近充值申请暂时无法加载，请稍后重试。" : null,
+    recentCreditLogsResult.error ? "最近 Credits 变动暂时无法加载，请稍后重试。" : null
   ].filter(Boolean);
 
   return (
     <main className="page-shell min-h-screen px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <AppNav active="admin" />
+        <PageToast
+          message={params.error ?? params.success}
+          variant={params.error ? "error" : "success"}
+        />
 
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -386,9 +402,21 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           />
           <DashboardCard
             icon={MessageSquareText}
-            label="今日聊天消息数"
-            value={formatInteger(todayMessagesResult.count ?? 0)}
-            description="chat_messages 今日记录"
+            label="今日消息数"
+            value={formatInteger(todayMessageCount)}
+            description="message_usage 今日发送"
+          />
+          <DashboardCard
+            icon={Activity}
+            label="今日活跃用户数"
+            value={formatInteger(todayActiveUsers)}
+            description="今日发送过消息的用户"
+          />
+          <DashboardCard
+            icon={ShieldCheck}
+            label="被限流次数"
+            value={formatInteger(todayRateLimitedCount)}
+            description="今日触发发送限制"
           />
           <DashboardCard
             icon={WalletCards}
@@ -404,15 +432,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           />
         </div>
 
-        {params.success ? (
-          <Alert className="border-primary/20 bg-primary/10 text-primary">
-            <AlertDescription>{params.success}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {params.error ? (
-          <Alert variant="destructive">
-            <AlertDescription>{params.error}</AlertDescription>
+        {pendingCount === 0 ? (
+          <Alert>
+            <AlertDescription>暂无待审核用户。</AlertDescription>
           </Alert>
         ) : null}
 
@@ -439,7 +461,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </CardHeader>
             <CardContent>
               {recentRecharges.length === 0 ? (
-                <EmptyState>暂时没有充值申请。</EmptyState>
+                <EmptyState>暂无充值申请。</EmptyState>
               ) : (
                 <>
                   <div className="hidden overflow-x-auto rounded-lg border md:block">
@@ -509,7 +531,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </CardHeader>
             <CardContent>
               {recentCreditLogs.length === 0 ? (
-                <EmptyState>暂时没有 credits 变动。</EmptyState>
+                <EmptyState>暂无 Credits 变动记录。</EmptyState>
               ) : (
                 <>
                   <div className="hidden overflow-x-auto rounded-lg border md:block">
@@ -594,7 +616,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </CardHeader>
           <CardContent>
             {recentUsers.length === 0 ? (
-              <EmptyState>暂时没有注册用户。</EmptyState>
+              <EmptyState>暂无注册用户。</EmptyState>
             ) : (
               <>
                 <div className="hidden overflow-x-auto rounded-lg border md:block">
@@ -672,14 +694,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <CardContent>
             {profilesResult.error ? (
               <Alert variant="destructive">
-                <AlertDescription>
-                  读取用户列表失败：{profilesResult.error.message}
-                </AlertDescription>
+                <AlertDescription>用户列表暂时无法加载，请稍后重试。</AlertDescription>
               </Alert>
             ) : null}
 
             {!profilesResult.error && users.length === 0 ? (
-              <EmptyState>暂时没有用户。</EmptyState>
+              <EmptyState>暂无用户。</EmptyState>
             ) : null}
 
             {!profilesResult.error && users.length > 0 ? (

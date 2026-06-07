@@ -22,7 +22,7 @@ export function ChatMessageList({ messages }: ChatMessageListProps) {
           </div>
           <h2 className="mt-4 text-lg font-semibold tracking-normal">开始一段新对话</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            输入问题后，Connects AI 会调用 OpenAI 并保存本轮对话。
+            还没有聊天记录，开始你的第一个问题吧。
           </p>
         </div>
       </div>

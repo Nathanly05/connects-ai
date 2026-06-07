@@ -2,7 +2,6 @@ import Link from "next/link";
 import { LogIn } from "lucide-react";
 import { signInAction } from "@/app/auth/actions";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageToast } from "@/components/ui/page-toast";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -25,6 +25,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <AuthShell eyebrow="欢迎回来">
+      <PageToast message={params.error} variant="error" />
       <Card className="w-full">
         <CardHeader>
           <CardTitle>登录 Connects AI</CardTitle>
@@ -33,12 +34,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {params.error ? (
-            <Alert variant="destructive" className="mb-5">
-              <AlertDescription>{params.error}</AlertDescription>
-            </Alert>
-          ) : null}
-
           <form action={signInAction} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email">邮箱</Label>

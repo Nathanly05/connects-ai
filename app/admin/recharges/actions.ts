@@ -27,7 +27,7 @@ function friendlyError(message?: string) {
     return "只有已通过审核的管理员可以操作充值申请。";
   }
 
-  return message;
+  return "操作失败，请稍后再试。";
 }
 
 export async function approveRechargeAction(formData: FormData) {

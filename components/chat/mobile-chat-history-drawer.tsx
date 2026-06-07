@@ -85,13 +85,13 @@ export function MobileChatHistoryDrawer({
             <div className="flex-1 overflow-y-auto p-2">
               {sessionsError ? (
                 <div className="p-3 text-sm leading-6 text-destructive">
-                  读取聊天历史失败：{sessionsError}
+                  聊天历史暂时无法加载，请稍后重试。
                 </div>
               ) : null}
 
               {!sessionsError && sessions.length === 0 ? (
                 <div className="p-3 text-sm leading-6 text-muted-foreground">
-                  还没有聊天记录。
+                  还没有聊天记录，开始你的第一个问题吧。
                 </div>
               ) : null}
 

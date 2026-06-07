@@ -202,12 +202,11 @@ export default async function AccountPage() {
   const profileCredits = profile?.credits ?? 0;
   const profileCreatedAt = profile?.created_at ?? user.created_at;
   const errors = [
-    profileResult.error ? `读取账户信息失败：${profileResult.error.message}` : null,
-    stripeResult.error ? `读取 Stripe 充值记录失败：${stripeResult.error.message}` : null,
-    globePayResult.error
-      ? `读取 GlobePay 充值申请失败：${globePayResult.error.message}`
+    profileResult.error ? "账户信息暂时无法加载，请稍后重试。" : null,
+    stripeResult.error || globePayResult.error
+      ? "充值记录暂时无法加载，请稍后重试。"
       : null,
-    creditLogsResult.error ? `读取 Credits 记录失败：${creditLogsResult.error.message}` : null
+    creditLogsResult.error ? "Credits 记录暂时无法加载，请稍后重试。" : null
   ].filter(Boolean);
 
   return (
@@ -310,7 +309,7 @@ export default async function AccountPage() {
           </CardHeader>
           <CardContent>
             {rechargeRecords.length === 0 ? (
-              <EmptyState>暂时没有充值记录。</EmptyState>
+              <EmptyState>暂无充值记录。</EmptyState>
             ) : (
               <>
                 <div className="hidden rounded-lg border md:block">
@@ -381,7 +380,7 @@ export default async function AccountPage() {
           </CardHeader>
           <CardContent>
             {creditLogs.length === 0 ? (
-              <EmptyState>暂时没有 Credits 记录。</EmptyState>
+              <EmptyState>暂无 Credits 变动记录。</EmptyState>
             ) : (
               <>
                 <div className="hidden rounded-lg border md:block">

@@ -21,6 +21,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { PageToast } from "@/components/ui/page-toast";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 
@@ -114,6 +115,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
     <main className="page-shell min-h-screen px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <AppNav active="chat" />
+        <PageToast message={params.error} variant="error" />
 
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -135,12 +137,6 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
           </div>
         </header>
 
-        {params.error ? (
-          <Alert variant={params.error.includes("Credits") ? "default" : "destructive"}>
-            <AlertDescription>{params.error}</AlertDescription>
-          </Alert>
-        ) : null}
-
         {isLowCredits ? (
           <Alert className="border-amber-300 bg-amber-50 text-amber-900">
             <AlertTriangle className="mr-2 inline size-4 align-[-2px]" aria-hidden="true" />
@@ -155,7 +151,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
             <AlertDescription>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-medium">Credits 已用完，请充值后继续使用。</p>
+                  <p className="font-medium">Credits 不足，请充值后继续使用。</p>
                   <p className="mt-1 text-sm text-destructive/80">
                     充值到账后页面会重新读取余额，你就可以继续发送消息。
                   </p>
@@ -197,13 +193,13 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
             <CardContent className="p-0">
               {sessionsError ? (
                 <div className="p-4 text-sm leading-6 text-destructive">
-                  读取聊天历史失败：{sessionsError.message}
+                  聊天历史暂时无法加载，请稍后重试。
                 </div>
               ) : null}
 
               {!sessionsError && sessions.length === 0 ? (
                 <div className="p-4 text-sm leading-6 text-muted-foreground">
-                  还没有聊天记录。
+                  还没有聊天记录，开始你的第一个问题吧。
                 </div>
               ) : null}
 
@@ -246,7 +242,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
                 <div className="p-4">
                   <Alert variant="destructive">
                     <AlertDescription>
-                      读取消息失败：{messagesError}。请确认已运行 Phase 3 SQL。
+                      消息暂时无法加载，请稍后重试。
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -257,7 +253,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
                 sessionId={selectedSessionId}
                 credits={credits}
                 disabled={isOutOfCredits}
-                disabledMessage="Credits 已用完，请充值后继续使用。"
+                disabledMessage="Credits 不足，请充值后继续使用。"
                 showQuickPrompts={!messagesError && messages.length === 0}
               />
             </div>

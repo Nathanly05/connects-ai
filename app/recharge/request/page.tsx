@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, ReceiptText } from "lucide-react";
 import { submitGlobePayRechargeRequestAction } from "@/app/recharge/request/actions";
 import { AppNav } from "@/components/layout/app-nav";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageToast } from "@/components/ui/page-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { billingPlans } from "@/lib/billing-plans";
 import { createClient } from "@/lib/supabase/server";
@@ -43,6 +43,10 @@ export default async function RechargeRequestPage({
     <main className="page-shell min-h-screen px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
       <section className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-6">
         <AppNav active="recharge" />
+        <PageToast
+          message={params.error ?? params.success}
+          variant={params.error ? "error" : "success"}
+        />
 
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -62,18 +66,6 @@ export default async function RechargeRequestPage({
             </Link>
           </Button>
         </header>
-
-        {params.success ? (
-          <Alert className="border-primary/20 bg-primary/10 text-primary">
-            <AlertDescription>{params.success}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {params.error ? (
-          <Alert variant="destructive">
-            <AlertDescription>{params.error}</AlertDescription>
-          </Alert>
-        ) : null}
 
         <Card>
           <CardHeader>

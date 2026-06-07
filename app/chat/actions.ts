@@ -12,6 +12,14 @@ type ChatMessage = {
 
 type ChatMode = "instant" | "thinking";
 
+type RateLimitResult = {
+  allowed: boolean;
+  reason: string | null;
+  minute_count: number;
+  daily_count: number;
+  rate_limited: boolean;
+};
+
 const chatModeCosts: Record<ChatMode, number> = {
   instant: 1,
   thinking: 5
@@ -24,10 +32,6 @@ function getString(formData: FormData, key: string) {
 
 function getChatMode(value: string): ChatMode {
   return value === "thinking" ? "thinking" : "instant";
-}
-
-function chatModeLabel(mode: ChatMode) {
-  return mode === "thinking" ? "Thinking" : "Instant";
 }
 
 function redirectWithChatError(sessionId: string | null, message: string): never {
@@ -67,14 +71,32 @@ function toOpenAIInput(messages: ChatMessage[], nextMessage: string) {
 
 function friendlyError(error: unknown) {
   if (error instanceof Error) {
-    if (error.message.includes("OPENAI_API_KEY")) {
-      return "OpenAI API Key 未配置，请先在 .env.local 中设置 OPENAI_API_KEY。";
-    }
+    const message = error.message.toLowerCase();
 
-    return error.message;
+    if (
+      message.includes("fetch") ||
+      message.includes("network") ||
+      message.includes("econnreset") ||
+      message.includes("etimedout") ||
+      message.includes("timeout")
+    ) {
+      return "网络连接异常，请检查后重试。";
+    }
   }
 
-  return "发送失败，请稍后再试。";
+  return "AI 服务暂时繁忙，请稍后再试。";
+}
+
+function friendlySaveError(message?: string) {
+  if (!message) {
+    return "AI 服务暂时繁忙，请稍后再试。";
+  }
+
+  if (message.includes("Credits") || message.includes("credits")) {
+    return "Credits 不足，请充值后继续使用。";
+  }
+
+  return "AI 服务暂时繁忙，请稍后再试。";
 }
 
 export async function sendMessageAction(formData: FormData) {
@@ -103,7 +125,7 @@ export async function sendMessageAction(formData: FormData) {
     .maybeSingle();
 
   if (profileError) {
-    redirectWithChatError(sessionId, "读取账号信息失败，请稍后重试。");
+    redirectWithChatError(sessionId, "账号信息暂时无法加载，请稍后再试。");
   }
 
   if (profile?.status !== "approved") {
@@ -113,14 +135,30 @@ export async function sendMessageAction(formData: FormData) {
   const currentCredits = profile?.credits ?? 0;
 
   if (currentCredits <= 0) {
-    redirectWithChatError(sessionId, "Credits 已用完，请充值后继续使用。");
+    redirectWithChatError(sessionId, "Credits 不足，请充值后继续使用。");
   }
 
   if (currentCredits < creditCost) {
-    redirectWithChatError(
-      sessionId,
-      `${chatModeLabel(mode)} 模式需要 ${creditCost} Credits，当前余额不足。`
-    );
+    redirectWithChatError(sessionId, "Credits 不足，请充值后继续使用。");
+  }
+
+  const { data: rateLimitRows, error: rateLimitError } = await supabase.rpc(
+    "check_chat_rate_limit",
+    {
+      p_credit_cost: creditCost
+    }
+  );
+
+  if (rateLimitError) {
+    redirectWithChatError(sessionId, "发送暂时不可用，请稍后再试。");
+  }
+
+  const rateLimit = Array.isArray(rateLimitRows)
+    ? (rateLimitRows[0] as RateLimitResult | undefined)
+    : (rateLimitRows as RateLimitResult | null);
+
+  if (!rateLimit?.allowed) {
+    redirectWithChatError(sessionId, rateLimit?.reason || "发送过快，请稍后再试");
   }
 
   let previousMessages: ChatMessage[] = [];
@@ -144,7 +182,7 @@ export async function sendMessageAction(formData: FormData) {
       .order("created_at", { ascending: true });
 
     if (messagesError) {
-      redirectWithChatError(sessionId, "读取历史消息失败，请确认已运行 Phase 3 SQL。");
+      redirectWithChatError(sessionId, "消息暂时无法加载，请稍后重试。");
     }
 
     previousMessages = (messages ?? []) as ChatMessage[];
@@ -168,7 +206,7 @@ export async function sendMessageAction(formData: FormData) {
   }
 
   if (!assistantContent) {
-    redirectWithChatError(sessionId, "OpenAI 没有返回可显示的文本，请稍后再试。");
+    redirectWithChatError(sessionId, "AI 服务暂时繁忙，请稍后再试。");
   }
 
   const { data: savedRows, error: saveError } = await supabase.rpc("save_chat_exchange", {
@@ -180,7 +218,7 @@ export async function sendMessageAction(formData: FormData) {
   });
 
   if (saveError) {
-    redirectWithChatError(sessionId, saveError.message || "保存对话失败。");
+    redirectWithChatError(sessionId, friendlySaveError(saveError.message));
   }
 
   const savedSessionId = Array.isArray(savedRows)

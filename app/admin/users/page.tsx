@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { PageToast } from "@/components/ui/page-toast";
 import {
   Table,
   TableBody,
@@ -142,6 +143,10 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
     <main className="page-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8">
       <section className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <AppNav active="admin" />
+        <PageToast
+          message={params.error ?? params.success}
+          variant={params.error ? "error" : "success"}
+        />
 
         <header className="flex flex-col gap-4 rounded-lg border bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -162,15 +167,9 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
           <SummaryItem label="已拒绝" value={rejectedCount} />
         </div>
 
-        {params.success ? (
-          <Alert className="border-primary/20 bg-primary/10 text-primary">
-            <AlertDescription>{params.success}</AlertDescription>
-          </Alert>
-        ) : null}
-
-        {params.error ? (
-          <Alert variant="destructive">
-            <AlertDescription>{params.error}</AlertDescription>
+        {pendingCount === 0 ? (
+          <Alert>
+            <AlertDescription>暂无待审核用户。</AlertDescription>
           </Alert>
         ) : null}
 
@@ -187,15 +186,13 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
           <CardContent>
             {error ? (
               <Alert variant="destructive">
-                <AlertDescription>
-                  读取用户列表失败：{error.message}
-                </AlertDescription>
+                <AlertDescription>用户列表暂时无法加载，请稍后重试。</AlertDescription>
               </Alert>
             ) : null}
 
             {!error && users.length === 0 ? (
               <div className="rounded-lg border bg-secondary/50 px-4 py-10 text-center text-sm text-muted-foreground">
-                暂时没有用户。
+                暂无用户。
               </div>
             ) : null}
 
