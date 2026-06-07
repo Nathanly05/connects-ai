@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 
-export const defaultChatModel = process.env.OPENAI_MODEL || "gpt-5-mini";
+export const defaultChatModel = "gpt-5-mini";
 
 export function createOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;

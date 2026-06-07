@@ -40,11 +40,14 @@ using (
   or public.is_admin()
 );
 
+drop function if exists public.save_chat_exchange(uuid, text, text, text);
+drop function if exists public.save_chat_exchange(text, uuid, text, text);
+
 create or replace function public.save_chat_exchange(
-  p_session_id uuid,
-  p_user_content text,
   p_assistant_content text,
-  p_title text default null
+  p_session_id uuid,
+  p_title text,
+  p_user_content text
 )
 returns table (
   session_id uuid,
@@ -76,8 +79,8 @@ begin
 
   select *
   into v_profile
-  from public.profiles
-  where id = v_user_id
+  from public.profiles as p
+  where p.id = v_user_id
   for update;
 
   if not found then
@@ -99,41 +102,44 @@ begin
   else
     if not exists (
       select 1
-      from public.chat_sessions
-      where id = v_session_id
-        and user_id = v_user_id
+      from public.chat_sessions as cs
+      where cs.id = v_session_id
+        and cs.user_id = v_user_id
     ) then
       raise exception 'Chat session not found';
     end if;
 
-    update public.chat_sessions
+    update public.chat_sessions as cs
     set title = case
-          when title = '新对话' then left(v_title, 40)
-          else title
+          when cs.title = '新对话' then left(v_title, 40)
+          else cs.title
         end,
         updated_at = now()
-    where id = v_session_id
-      and user_id = v_user_id;
+    where cs.id = v_session_id
+      and cs.user_id = v_user_id;
   end if;
 
-  update public.profiles
-  set credits = credits - 1
-  where id = v_user_id
-  returning * into v_profile;
+  insert into public.chat_messages (session_id, user_id, role, content)
+  values (v_session_id, v_user_id, 'user', v_user_content);
+
+  insert into public.chat_messages (session_id, user_id, role, content)
+  values (v_session_id, v_user_id, 'assistant', v_assistant_content);
+
+  update public.profiles as p
+  set credits = p.credits - 1
+  where p.id = v_user_id
+  returning p.* into v_profile;
 
   insert into public.credit_logs (user_id, admin_id, amount, balance_after, reason)
   values (v_user_id, null, -1, v_profile.credits, 'AI 对话扣除 1 credit');
-
-  insert into public.chat_messages (session_id, user_id, role, content)
-  values
-    (v_session_id, v_user_id, 'user', v_user_content),
-    (v_session_id, v_user_id, 'assistant', v_assistant_content);
 
   return query select v_session_id, v_profile.credits;
 end;
 $$;
 
-revoke all on function public.save_chat_exchange(uuid, text, text, text) from public;
-grant execute on function public.save_chat_exchange(uuid, text, text, text) to authenticated;
+revoke all on function public.save_chat_exchange(text, uuid, text, text) from public;
+grant execute on function public.save_chat_exchange(text, uuid, text, text) to authenticated;
+
+notify pgrst, 'reload schema';
 
 commit;
