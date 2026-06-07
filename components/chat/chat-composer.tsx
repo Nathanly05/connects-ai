@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 type ChatComposerProps = {
   sessionId?: string | null;
   disabled?: boolean;
+  disabledMessage?: string;
 };
 
 function SubmitButton({ disabled }: { disabled?: boolean }) {
@@ -22,14 +23,19 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-export function ChatComposer({ sessionId, disabled }: ChatComposerProps) {
+export function ChatComposer({ sessionId, disabled, disabledMessage }: ChatComposerProps) {
   return (
     <form action={sendMessageAction} className="border-t bg-white p-3 sm:p-4">
       <input type="hidden" name="sessionId" value={sessionId ?? ""} />
       <div className="flex flex-col gap-3">
+        {disabled && disabledMessage ? (
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm leading-6 text-destructive">
+            {disabledMessage}
+          </div>
+        ) : null}
         <Textarea
           name="content"
-          placeholder={disabled ? "Credits不足，请充值" : "输入你的问题..."}
+          placeholder={disabled ? "Credits 已用完，请充值后继续使用。" : "输入你的问题..."}
           disabled={disabled}
           required
           className="resize-none"

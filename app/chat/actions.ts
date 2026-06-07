@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createOpenAIClient, defaultChatModel } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
@@ -93,7 +94,7 @@ export async function sendMessageAction(formData: FormData) {
   }
 
   if ((profile?.credits ?? 0) <= 0) {
-    redirectWithChatError(sessionId, "Credits不足，请充值");
+    redirectWithChatError(sessionId, "Credits 已用完，请充值后继续使用。");
   }
 
   let previousMessages: ChatMessage[] = [];
@@ -159,5 +160,6 @@ export async function sendMessageAction(formData: FormData) {
     ? savedRows[0]?.session_id
     : savedRows?.session_id;
 
+  revalidatePath("/chat");
   redirect(`/chat?session=${savedSessionId ?? sessionId}`);
 }

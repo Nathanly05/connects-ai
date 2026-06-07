@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CreditCard, MessageCircle, Plus, WalletCards } from "lucide-react";
+import {
+  AlertTriangle,
+  CreditCard,
+  MessageCircle,
+  Plus,
+  QrCode,
+  WalletCards
+} from "lucide-react";
 import { signOutAction } from "@/app/auth/actions";
 import { ChatComposer } from "@/components/chat/chat-composer";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
@@ -101,6 +108,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
 
   const credits = profile?.credits ?? 0;
   const isOutOfCredits = credits <= 0;
+  const isLowCredits = credits > 0 && credits <= 20;
 
   return (
     <main className="page-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8">
@@ -117,14 +125,39 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="inline-flex items-center gap-2 rounded-md border bg-secondary/60 px-3 py-2 text-sm font-medium">
-              <WalletCards className="size-4 text-primary" aria-hidden="true" />
-              当前 Credits：{credits}
+            <div
+              className={cn(
+                "inline-flex items-center gap-3 rounded-md border bg-white px-4 py-3 shadow-sm",
+                isLowCredits && "border-amber-300 bg-amber-50",
+                isOutOfCredits && "border-destructive/30 bg-destructive/10"
+              )}
+            >
+              <div
+                className={cn(
+                  "flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary",
+                  isLowCredits && "bg-amber-100 text-amber-700",
+                  isOutOfCredits && "bg-destructive/10 text-destructive"
+                )}
+              >
+                <WalletCards className="size-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">当前余额</p>
+                <p className="text-base font-semibold tracking-normal">
+                  当前余额：{credits} Credits
+                </p>
+              </div>
             </div>
             <Button asChild>
               <Link href="/billing">
                 <CreditCard aria-hidden="true" />
-                自动充值
+                Stripe 自动充值
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/recharge?method=globepay">
+                <QrCode aria-hidden="true" />
+                微信/支付宝充值
               </Link>
             </Button>
             <form action={signOutAction}>
@@ -136,14 +169,46 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
         </header>
 
         {params.error ? (
-          <Alert variant={params.error === "Credits不足，请充值" ? "default" : "destructive"}>
+          <Alert variant={params.error.includes("Credits") ? "default" : "destructive"}>
             <AlertDescription>{params.error}</AlertDescription>
           </Alert>
         ) : null}
 
+        {isLowCredits ? (
+          <Alert className="border-amber-300 bg-amber-50 text-amber-900">
+            <AlertTriangle className="mr-2 inline size-4 align-[-2px]" aria-hidden="true" />
+            <AlertDescription className="inline">
+              余额较低，请及时充值，避免影响使用。
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         {isOutOfCredits ? (
-          <Alert>
-            <AlertDescription>Credits不足，请充值</AlertDescription>
+          <Alert className="border-destructive/30 bg-destructive/10 text-destructive">
+            <AlertDescription>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium">Credits 已用完，请充值后继续使用。</p>
+                  <p className="mt-1 text-sm text-destructive/80">
+                    充值到账后页面会重新读取余额，你就可以继续发送消息。
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button asChild>
+                    <Link href="/billing">
+                      <CreditCard aria-hidden="true" />
+                      Stripe 自动充值
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="bg-white text-foreground hover:bg-secondary">
+                    <Link href="/recharge?method=globepay">
+                      <QrCode aria-hidden="true" />
+                      微信/支付宝充值
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </AlertDescription>
           </Alert>
         ) : null}
 
@@ -221,7 +286,11 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
               ) : (
                 <ChatMessageList messages={messages} />
               )}
-              <ChatComposer sessionId={selectedSessionId} disabled={isOutOfCredits} />
+              <ChatComposer
+                sessionId={selectedSessionId}
+                disabled={isOutOfCredits}
+                disabledMessage="Credits 已用完，请充值后继续使用。"
+              />
             </div>
           </Card>
         </div>
