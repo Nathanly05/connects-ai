@@ -12,6 +12,7 @@ import {
   MessageCircle,
   MessageSquareText,
   ReceiptText,
+  Server,
   ShieldCheck,
   UserCheck,
   UserPlus,
@@ -380,6 +381,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Button asChild variant="secondary" className="w-full sm:w-auto">
+              <Link href="/admin/health">
+                <Server aria-hidden="true" />
+                健康检查
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href="/admin/support">
                 <LifeBuoy aria-hidden="true" />
                 反馈工单
