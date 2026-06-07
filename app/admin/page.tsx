@@ -7,6 +7,7 @@ import {
   Clock3,
   Coins,
   CreditCard,
+  Download,
   LifeBuoy,
   MessageCircle,
   MessageSquareText,
@@ -219,6 +220,30 @@ function DetailRow({
       <span className="shrink-0 text-muted-foreground">{label}</span>
       <span className="min-w-0 break-words text-right font-medium">{children}</span>
     </div>
+  );
+}
+
+function ExportButton({
+  href,
+  label,
+  description
+}: {
+  href: string;
+  label: string;
+  description: string;
+}) {
+  return (
+    <Button asChild variant="outline" className="h-auto w-full justify-start bg-white px-4 py-3">
+      <a href={href}>
+        <Download aria-hidden="true" />
+        <span className="min-w-0 text-left">
+          <span className="block font-medium">{label}</span>
+          <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+            {description}
+          </span>
+        </span>
+      </a>
+    </Button>
   );
 }
 
@@ -461,6 +486,42 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </AlertDescription>
           </Alert>
         ) : null}
+
+        <Card>
+          <CardHeader>
+            <div className="mb-1 flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Download className="size-5" aria-hidden="true" />
+            </div>
+            <CardTitle className="text-lg">数据导出</CardTitle>
+            <CardDescription>
+              导出 CSV 文件，只有已通过审核的管理员可以下载。
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <ExportButton
+                href="/admin/export/users"
+                label="导出用户列表 CSV"
+                description="email、role、status、credits"
+              />
+              <ExportButton
+                href="/admin/export/stripe"
+                label="导出 Stripe 订单 CSV"
+                description="套餐、金额、credits、状态"
+              />
+              <ExportButton
+                href="/admin/export/recharges"
+                label="导出 GlobePay 申请 CSV"
+                description="套餐、金额、状态、审核时间"
+              />
+              <ExportButton
+                href="/admin/export/credits"
+                label="导出 Credits 记录 CSV"
+                description="变动数量、原因、创建时间"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 xl:grid-cols-2">
           <Card>
