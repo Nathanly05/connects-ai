@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { LegalFooter } from "@/components/layout/legal-footer";
 
 export default function HomePage() {
   return (
@@ -137,6 +138,7 @@ export default function HomePage() {
           </Card>
         </section>
       </section>
+      <LegalFooter />
     </main>
   );
 }
