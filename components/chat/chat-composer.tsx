@@ -8,8 +8,10 @@ import {
   FileUp,
   ImageUp,
   Lock,
+  Mic,
   Plus,
-  SendHorizontal
+  SendHorizontal,
+  Waves
 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { sendMessageAction } from "@/app/chat/actions";
@@ -290,6 +292,35 @@ export function ChatComposer({
                   </div>
                 ) : null}
               </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-10 shrink-0 rounded-full bg-white"
+                aria-label="语音输入"
+                onClick={() => {
+                  setNotice("语音输入功能即将上线");
+                  setIsPlusMenuOpen(false);
+                  setIsModelMenuOpen(false);
+                }}
+              >
+                <Mic aria-hidden="true" />
+              </Button>
+
+              <Button
+                type="button"
+                size="icon"
+                className="size-10 shrink-0 rounded-full bg-foreground text-background hover:bg-foreground/90"
+                aria-label="实时语音对话"
+                onClick={() => {
+                  setNotice("实时语音对话功能即将上线");
+                  setIsPlusMenuOpen(false);
+                  setIsModelMenuOpen(false);
+                }}
+              >
+                <Waves aria-hidden="true" />
+              </Button>
 
               <SubmitButton disabled={cannotSend} />
             </div>
