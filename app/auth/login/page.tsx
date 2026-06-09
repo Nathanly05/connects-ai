@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LogIn } from "lucide-react";
 import { signInAction } from "@/app/auth/actions";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { TurnstileWidget } from "@/components/auth/turnstile-widget";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -57,6 +58,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 required
               />
             </div>
+            <TurnstileWidget action="login" />
             <Button type="submit" className="w-full">
               <LogIn aria-hidden="true" />
               登录

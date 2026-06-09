@@ -28,9 +28,15 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 OPENAI_API_KEY=sk-your-openai-api-key
 STRIPE_SECRET_KEY=sk_test_your-stripe-secret-key
 STRIPE_WEBHOOK_SECRET=whsec_your-stripe-webhook-secret
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=0x4AAAAAA_your-turnstile-site-key
+TURNSTILE_SECRET_KEY=0x4AAAAAA_your-turnstile-secret-key
+IPINFO_TOKEN=your-ipinfo-token
 ```
 
-`OPENAI_API_KEY`、`STRIPE_SECRET_KEY`、`STRIPE_WEBHOOK_SECRET` 和 `SUPABASE_SERVICE_ROLE_KEY` 只放在 `.env.local`，不要写进前端代码，也不要提交到 GitHub。
+`OPENAI_API_KEY`、`STRIPE_SECRET_KEY`、`STRIPE_WEBHOOK_SECRET`、`SUPABASE_SERVICE_ROLE_KEY`、`TURNSTILE_SECRET_KEY` 和 `IPINFO_TOKEN` 只放在 `.env.local`，不要写进前端代码，也不要提交到 GitHub。
+`NEXT_PUBLIC_TURNSTILE_SITE_KEY` 是前端公开 site key，可以暴露给浏览器。
+
+`IPINFO_TOKEN` 用于注册风控里的 VPN、代理、Tor、机房 IP 检测。没有配置时系统不会误拦截用户，但会在注册审计里记录 IP 情报未配置。
 
 ## 运行项目
 
@@ -81,7 +87,38 @@ Stripe 自动充值新增支付订单表和支付完成函数：
 supabase/migrations/0005_stripe_billing.sql
 ```
 
+注册风控、Turnstile 审计、邮箱验证后发放免费额度：
+
+```txt
+supabase/migrations/0011_registration_turnstile_audit.sql
+```
+
 请把这些 SQL 文件的内容分别复制到 Supabase Dashboard 的 **SQL Editor** 里运行。
+
+## Turnstile 和注册风控
+
+注册页使用 Cloudflare Turnstile。前端读取：
+
+```bash
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+```
+
+后端在创建 Supabase Auth 用户前验证：
+
+```bash
+TURNSTILE_SECRET_KEY=
+```
+
+注册限制：
+
+- 同一 IP 每小时最多 5 次注册尝试
+- 同一 IP 24 小时最多 1 个成功注册账号
+- 同一 IP lifetime 最多 3 个成功注册账号
+- 配置 `IPINFO_TOKEN` 后，会拦截 VPN、代理、Tor、relay、hosting/datacenter IP
+- 免费 credits 只会在账号 approved 且邮箱已验证后发放
+- 同一 IP 或同一 device fingerprint 只能领取一次免费 credits
+
+请在 Supabase Dashboard 的 **Authentication → Providers → Email** 中确认邮箱验证已开启。
 
 ## GlobePay 充值配置
 

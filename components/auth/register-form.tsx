@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { UserPlus } from "lucide-react";
 import { signUpAction } from "@/app/auth/actions";
+import { TurnstileWidget } from "@/components/auth/turnstile-widget";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,6 +82,7 @@ export function RegisterForm() {
           required
         />
       </div>
+      <TurnstileWidget action="register" />
       <Button type="submit" className="w-full">
         <UserPlus aria-hidden="true" />
         注册并等待审核
