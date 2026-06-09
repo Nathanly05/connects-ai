@@ -19,6 +19,8 @@ function redirectWithPaymentError(): never {
   redirectWithError("支付暂时无法发起，请稍后再试。");
 }
 
+const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
+
 export async function createCheckoutSessionAction(formData: FormData) {
   const plan = getBillingPlan(getString(formData, "planId"));
   const supabase = await createClient();
@@ -38,6 +40,15 @@ export async function createCheckoutSessionAction(formData: FormData) {
 
   if (profileError) {
     redirectWithPaymentError();
+  }
+
+  if (profile?.status === "banned") {
+    await supabase.auth.signOut();
+    redirect(`/auth/login?error=${encodeURIComponent(bannedMessage)}`);
+  }
+
+  if (profile?.status === "rejected") {
+    redirect("/auth/rejected");
   }
 
   if (profile?.status !== "approved") {

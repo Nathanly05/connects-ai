@@ -14,7 +14,7 @@ type AppNavProps = {
 };
 
 type ProfileRole = "user" | "admin";
-type ProfileStatus = "pending" | "approved" | "rejected";
+type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
 
 type Profile = {
   email: string | null;

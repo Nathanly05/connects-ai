@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 };
 
 type ProfileRole = "user" | "admin";
-type ProfileStatus = "pending" | "approved" | "rejected";
+type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
 type RechargeStatus = "pending" | "approved" | "rejected";
 
 type Profile = {
@@ -140,7 +140,8 @@ function statusLabel(status: ProfileStatus) {
   const labels: Record<ProfileStatus, string> = {
     pending: "待审核",
     approved: "已通过",
-    rejected: "已拒绝"
+    rejected: "已拒绝",
+    banned: "已封禁"
   };
 
   return labels[status];
@@ -162,6 +163,10 @@ function statusVariant(status: ProfileStatus | RechargeStatus) {
   }
 
   if (status === "rejected") {
+    return "outline";
+  }
+
+  if (status === "banned") {
     return "outline";
   }
 

@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 type ProfileRole = "user" | "admin";
-type ProfileStatus = "pending" | "approved" | "rejected";
+type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
 type TicketStatus = "open" | "in_progress" | "resolved";
 
 type SupportTicket = {

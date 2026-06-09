@@ -60,7 +60,26 @@ export async function approveUserAction(formData: FormData) {
     redirectWithMessage("error", friendlyError(error.message));
   }
 
-  redirectWithMessage("success", "已批准用户，并自动增加 50 credits。");
+  redirectWithMessage("success", "已批准用户，并按风控规则处理免费额度。");
+}
+
+export async function approveUserWithoutFreeCreditsAction(formData: FormData) {
+  const userId = getString(formData, "userId");
+
+  if (!userId) {
+    redirectWithMessage("error", "缺少用户 ID。");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_approve_user_without_free_credits", {
+    p_user_id: userId
+  });
+
+  if (error) {
+    redirectWithMessage("error", friendlyError(error.message));
+  }
+
+  redirectWithMessage("success", "已批准用户，未发放免费额度。");
 }
 
 export async function rejectUserAction(formData: FormData) {
@@ -80,6 +99,25 @@ export async function rejectUserAction(formData: FormData) {
   }
 
   redirectWithMessage("success", "已拒绝该用户申请。");
+}
+
+export async function banUserAction(formData: FormData) {
+  const userId = getString(formData, "userId");
+
+  if (!userId) {
+    redirectWithMessage("error", "缺少用户 ID。");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_ban_user", {
+    p_user_id: userId
+  });
+
+  if (error) {
+    redirectWithMessage("error", friendlyError(error.message));
+  }
+
+  redirectWithMessage("success", "已封禁该账号。");
 }
 
 export async function addCreditsAction(formData: FormData) {

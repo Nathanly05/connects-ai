@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 type ProfileRole = "user" | "admin";
-type ProfileStatus = "pending" | "approved" | "rejected";
+type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
 type PaymentStatus = "pending" | "paid" | "failed";
 
 type PaymentOrder = {

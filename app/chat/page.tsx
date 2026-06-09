@@ -33,6 +33,8 @@ export const metadata: Metadata = {
   title: "Chat"
 };
 
+const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
+
 type ChatSession = {
   id: string;
   title: string;
@@ -78,9 +80,26 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("email, credits")
+    .select("email, credits, status")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (profile?.status === "banned") {
+    await supabase.auth.signOut();
+    redirect(`/auth/login?error=${encodeURIComponent(bannedMessage)}`);
+  }
+
+  if (profile?.status === "rejected") {
+    redirect("/auth/rejected");
+  }
+
+  if (profile?.status === "pending") {
+    redirect("/auth/pending");
+  }
+
+  if (profile?.status !== "approved") {
+    redirect("/auth/pending");
+  }
 
   const { data: sessionRows, error: sessionsError } = await supabase
     .from("chat_sessions")

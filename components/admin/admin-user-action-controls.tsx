@@ -1,9 +1,11 @@
 "use client";
 
-import { Check, Minus, Plus, X } from "lucide-react";
+import { Ban, Check, Minus, Plus, ShieldCheck, X } from "lucide-react";
 import {
   addCreditsAction,
   approveUserAction,
+  approveUserWithoutFreeCreditsAction,
+  banUserAction,
   rejectUserAction,
   removeCreditsAction
 } from "@/app/admin/actions";
@@ -24,7 +26,7 @@ import { Label } from "@/components/ui/label";
 type AdminUserActionControlsProps = {
   userId: string;
   email: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "banned";
   credits: number;
 };
 
@@ -108,20 +110,38 @@ export function AdminUserActionControls({
   return (
     <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
       {status === "pending" ? (
-        <form action={approveUserAction} className="w-full sm:w-auto">
-          <input type="hidden" name="userId" value={userId} />
-          <Button type="submit" size="sm" className="w-full sm:w-auto">
-            <Check aria-hidden="true" />
-            批准
-          </Button>
-        </form>
+        <>
+          <form action={approveUserAction} className="w-full sm:w-auto">
+            <input type="hidden" name="userId" value={userId} />
+            <Button type="submit" size="sm" className="w-full sm:w-auto">
+              <Check aria-hidden="true" />
+              批准并发放
+            </Button>
+          </form>
+          <form action={approveUserWithoutFreeCreditsAction} className="w-full sm:w-auto">
+            <input type="hidden" name="userId" value={userId} />
+            <Button type="submit" size="sm" variant="outline" className="w-full sm:w-auto">
+              <ShieldCheck aria-hidden="true" />
+              批准不发
+            </Button>
+          </form>
+        </>
       ) : null}
-      {status !== "rejected" ? (
+      {status !== "rejected" && status !== "banned" ? (
         <form action={rejectUserAction} className="w-full sm:w-auto">
           <input type="hidden" name="userId" value={userId} />
           <Button type="submit" variant="destructive" size="sm" className="w-full sm:w-auto">
             <X aria-hidden="true" />
             拒绝
+          </Button>
+        </form>
+      ) : null}
+      {status !== "banned" ? (
+        <form action={banUserAction} className="w-full sm:w-auto">
+          <input type="hidden" name="userId" value={userId} />
+          <Button type="submit" variant="destructive" size="sm" className="w-full sm:w-auto">
+            <Ban aria-hidden="true" />
+            封禁
           </Button>
         </form>
       ) : null}

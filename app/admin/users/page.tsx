@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 type ProfileRole = "user" | "admin";
-type ProfileStatus = "pending" | "approved" | "rejected";
+type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
 
 type Profile = {
   id: string;
@@ -40,6 +40,10 @@ type Profile = {
   role: ProfileRole;
   status: ProfileStatus;
   credits: number;
+  signup_ip: string | null;
+  device_id: string | null;
+  free_credits_granted: boolean;
+  risk_note: string | null;
   created_at: string;
 };
 
@@ -50,11 +54,13 @@ type UsersPageProps = {
     q?: string;
     status?: string;
     role?: string;
+    risk?: string;
   }>;
 };
 
 type StatusFilter = "all" | ProfileStatus;
 type RoleFilter = "all" | ProfileRole;
+type RiskFilter = "all" | "risky" | "free_granted" | "free_not_granted";
 
 function statusPath(status?: ProfileStatus | null) {
   if (status === "rejected") {
@@ -87,7 +93,8 @@ function statusLabel(status: ProfileStatus) {
   const labels: Record<ProfileStatus, string> = {
     pending: "待审核",
     approved: "已通过",
-    rejected: "已拒绝"
+    rejected: "已拒绝",
+    banned: "已封禁"
   };
 
   return labels[status];
@@ -99,6 +106,10 @@ function statusVariant(status: ProfileStatus) {
   }
 
   if (status === "rejected") {
+    return "outline";
+  }
+
+  if (status === "banned") {
     return "outline";
   }
 
@@ -115,11 +126,23 @@ function SummaryItem({ label, value }: { label: string; value: number }) {
 }
 
 function getStatusFilter(value?: string): StatusFilter {
-  if (value === "pending" || value === "approved" || value === "rejected") {
+  if (value === "pending" || value === "approved" || value === "rejected" || value === "banned") {
     return value;
   }
 
   return "all";
+}
+
+function getRiskFilter(value?: string): RiskFilter {
+  if (value === "risky" || value === "free_granted" || value === "free_not_granted") {
+    return value;
+  }
+
+  return "all";
+}
+
+function shortDeviceId(deviceId?: string | null) {
+  return deviceId ? deviceId.slice(0, 8) : "未记录";
 }
 
 function getRoleFilter(value?: string): RoleFilter {
@@ -161,11 +184,13 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
   const searchQuery = params.q?.trim() ?? "";
   const statusFilter = getStatusFilter(params.status);
   const roleFilter = getRoleFilter(params.role);
-  const hasFilters = Boolean(searchQuery) || statusFilter !== "all" || roleFilter !== "all";
+  const riskFilter = getRiskFilter(params.risk);
+  const hasFilters =
+    Boolean(searchQuery) || statusFilter !== "all" || roleFilter !== "all" || riskFilter !== "all";
 
   let usersQuery = supabase
     .from("profiles")
-    .select("id, email, role, status, credits, created_at")
+    .select("id, email, role, status, credits, signup_ip, device_id, free_credits_granted, risk_note, created_at")
     .order("created_at", { ascending: false });
 
   if (searchQuery) {
@@ -180,12 +205,25 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
     usersQuery = usersQuery.eq("role", roleFilter);
   }
 
+  if (riskFilter === "risky") {
+    usersQuery = usersQuery.not("risk_note", "is", null);
+  }
+
+  if (riskFilter === "free_granted") {
+    usersQuery = usersQuery.eq("free_credits_granted", true);
+  }
+
+  if (riskFilter === "free_not_granted") {
+    usersQuery = usersQuery.eq("free_credits_granted", false);
+  }
+
   const { data, error } = await usersQuery;
 
   const users = (data ?? []) as Profile[];
   const pendingCount = users.filter((profile) => profile.status === "pending").length;
   const approvedCount = users.filter((profile) => profile.status === "approved").length;
   const rejectedCount = users.filter((profile) => profile.status === "rejected").length;
+  const bannedCount = users.filter((profile) => profile.status === "banned").length;
 
   return (
     <main className="page-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8">
@@ -209,10 +247,11 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
           </div>
         </header>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-4">
           <SummaryItem label="待审核" value={pendingCount} />
           <SummaryItem label="已通过" value={approvedCount} />
           <SummaryItem label="已拒绝" value={rejectedCount} />
+          <SummaryItem label="已封禁" value={bannedCount} />
         </div>
 
         {!hasFilters && pendingCount === 0 ? (
@@ -228,13 +267,13 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             </div>
             <CardTitle>用户列表</CardTitle>
             <CardDescription>
-              当前结果 {users.length} 个用户。批准 pending 用户会调用数据库函数并自动增加 50 credits。
+              当前结果 {users.length} 个用户。批准 pending 用户会按风控规则发放 10 credits 免费额度。
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form
               action="/admin/users"
-              className="mb-5 grid gap-3 rounded-lg border bg-secondary/40 p-3 sm:grid-cols-[minmax(0,1fr)_180px_160px_auto_auto]"
+              className="mb-5 grid gap-3 rounded-lg border bg-secondary/40 p-3 lg:grid-cols-[minmax(0,1fr)_160px_140px_190px_auto_auto]"
             >
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" aria-hidden="true" />
@@ -255,6 +294,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
                 <option value="pending">pending</option>
                 <option value="approved">approved</option>
                 <option value="rejected">rejected</option>
+                <option value="banned">banned</option>
               </select>
               <select
                 name="role"
@@ -265,6 +305,17 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
                 <option value="all">全部角色</option>
                 <option value="user">user</option>
                 <option value="admin">admin</option>
+              </select>
+              <select
+                name="risk"
+                defaultValue={riskFilter}
+                className="h-11 rounded-md border border-input bg-white px-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
+                aria-label="按风控状态筛选"
+              >
+                <option value="all">全部风控</option>
+                <option value="risky">有风险</option>
+                <option value="free_granted">已领取免费额度</option>
+                <option value="free_not_granted">未领取免费额度</option>
               </select>
               <Button type="submit" className="w-full">
                 搜索
@@ -291,14 +342,17 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
 
             {!error && users.length > 0 ? (
               <>
-                <div className="hidden rounded-lg border md:block">
+                <div className="hidden overflow-x-auto rounded-lg border xl:block">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>邮箱</TableHead>
-                        <TableHead>角色</TableHead>
                         <TableHead>状态</TableHead>
                         <TableHead>Credits</TableHead>
+                        <TableHead>注册 IP</TableHead>
+                        <TableHead>设备 ID</TableHead>
+                        <TableHead>免费额度</TableHead>
+                        <TableHead>风险备注</TableHead>
                         <TableHead>注册时间</TableHead>
                         <TableHead className="min-w-[260px]">操作</TableHead>
                       </TableRow>
@@ -308,16 +362,25 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
                         <TableRow key={profile.id}>
                           <TableCell className="font-medium">{profile.email}</TableCell>
                           <TableCell>
-                            <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
-                              {roleLabel(profile.role)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
                             <Badge variant={statusVariant(profile.status)}>
                               {statusLabel(profile.status)}
                             </Badge>
                           </TableCell>
                           <TableCell>{profile.credits}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {profile.signup_ip ?? "未记录"}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {shortDeviceId(profile.device_id)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={profile.free_credits_granted ? "default" : "outline"}>
+                              {profile.free_credits_granted ? "已发放" : "未发放"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="min-w-[180px] text-muted-foreground">
+                            {profile.risk_note ?? "无"}
+                          </TableCell>
                           <TableCell className="text-muted-foreground">
                             {formatDate(profile.created_at)}
                           </TableCell>
@@ -335,7 +398,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
                   </Table>
                 </div>
 
-                <div className="grid gap-3 md:hidden">
+                <div className="grid gap-3 xl:hidden">
                   {users.map((profile) => (
                     <div key={profile.id} className="rounded-lg border bg-white p-4 shadow-sm">
                       <div className="flex flex-col gap-3">
@@ -353,6 +416,14 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
                             {statusLabel(profile.status)}
                           </Badge>
                           <Badge variant="outline">{profile.credits} credits</Badge>
+                          <Badge variant={profile.free_credits_granted ? "default" : "outline"}>
+                            {profile.free_credits_granted ? "已发免费额度" : "未发免费额度"}
+                          </Badge>
+                        </div>
+                        <div className="rounded-md bg-secondary/60 px-3 py-2 text-sm leading-6 text-muted-foreground">
+                          <p>注册 IP：{profile.signup_ip ?? "未记录"}</p>
+                          <p>设备 ID：{shortDeviceId(profile.device_id)}</p>
+                          <p>风险备注：{profile.risk_note ?? "无"}</p>
                         </div>
                         <UserActionControls
                           userId={profile.id}

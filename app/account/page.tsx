@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   title: "Account"
 };
 
-type ProfileStatus = "pending" | "approved" | "rejected";
+type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
 
 type Profile = {
   email: string | null;

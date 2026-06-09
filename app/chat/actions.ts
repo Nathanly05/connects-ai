@@ -25,6 +25,8 @@ const chatModeCosts: Record<ChatMode, number> = {
   thinking: 5
 };
 
+const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
+
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
@@ -126,6 +128,15 @@ export async function sendMessageAction(formData: FormData) {
 
   if (profileError) {
     redirectWithChatError(sessionId, "账号信息暂时无法加载，请稍后再试。");
+  }
+
+  if (profile?.status === "banned") {
+    await supabase.auth.signOut();
+    redirect(`/auth/login?error=${encodeURIComponent(bannedMessage)}`);
+  }
+
+  if (profile?.status === "rejected") {
+    redirect("/auth/rejected");
   }
 
   if (profile?.status !== "approved") {

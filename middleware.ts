@@ -1,13 +1,23 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-type ProfileStatus = "pending" | "approved" | "rejected";
+type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
 type ProfileRole = "user" | "admin";
+
+const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
 
 function redirectTo(request: NextRequest, pathname: string) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
   url.search = "";
+  return NextResponse.redirect(url);
+}
+
+function redirectToLoginWithError(request: NextRequest, message: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/auth/login";
+  url.search = "";
+  url.searchParams.set("error", message);
   return NextResponse.redirect(url);
 }
 
@@ -27,6 +37,10 @@ function pathForStatus(status?: ProfileStatus | null) {
     return "/auth/rejected";
   }
 
+  if (status === "banned") {
+    return "/auth/login";
+  }
+
   return "/auth/pending";
 }
 
@@ -41,7 +55,10 @@ export async function middleware(request: NextRequest) {
     if (
       pathname.startsWith("/chat") ||
       pathname.startsWith("/admin") ||
-      pathname.startsWith("/billing")
+      pathname.startsWith("/billing") ||
+      pathname.startsWith("/account") ||
+      pathname.startsWith("/recharge") ||
+      pathname.startsWith("/support")
     ) {
       return redirectTo(request, "/auth/login");
     }
@@ -77,7 +94,10 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/chat") ||
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/billing")
+    pathname.startsWith("/billing") ||
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/recharge") ||
+    pathname.startsWith("/support")
   ) {
     if (!user) {
       return redirectTo(request, "/auth/login");
@@ -91,6 +111,11 @@ export async function middleware(request: NextRequest) {
 
     const status = profile?.status as ProfileStatus | undefined;
     const role = profile?.role as ProfileRole | undefined;
+
+    if (status === "banned") {
+      await supabase.auth.signOut();
+      return redirectToLoginWithError(request, bannedMessage);
+    }
 
     if (status !== "approved") {
       return redirectTo(request, pathForStatus(status));
@@ -108,7 +133,14 @@ export async function middleware(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    return redirectTo(request, pathForStatus(profile?.status as ProfileStatus | undefined));
+    const status = profile?.status as ProfileStatus | undefined;
+
+    if (status === "banned") {
+      await supabase.auth.signOut();
+      return redirectToLoginWithError(request, bannedMessage);
+    }
+
+    return redirectTo(request, pathForStatus(status));
   }
 
   return response;

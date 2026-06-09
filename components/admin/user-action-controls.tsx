@@ -1,9 +1,11 @@
 "use client";
 
-import { Check, Minus, Plus, X } from "lucide-react";
+import { Ban, Check, Minus, Plus, ShieldCheck, X } from "lucide-react";
 import {
   addCreditsAction,
   approveUserAction,
+  approveUserWithoutFreeCreditsAction,
+  banUserAction,
   rejectUserAction,
   removeCreditsAction
 } from "@/app/admin/users/actions";
@@ -24,7 +26,7 @@ import { Label } from "@/components/ui/label";
 type UserActionControlsProps = {
   userId: string;
   email: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "banned";
   credits: number;
 };
 
@@ -113,7 +115,14 @@ export function UserActionControls({
             <input type="hidden" name="userId" value={userId} />
             <Button type="submit" size="sm" className="w-full sm:w-auto">
               <Check aria-hidden="true" />
-              批准
+              批准并发放
+            </Button>
+          </form>
+          <form action={approveUserWithoutFreeCreditsAction} className="w-full sm:w-auto">
+            <input type="hidden" name="userId" value={userId} />
+            <Button type="submit" size="sm" variant="outline" className="w-full sm:w-auto">
+              <ShieldCheck aria-hidden="true" />
+              批准不发
             </Button>
           </form>
           <form action={rejectUserAction} className="w-full sm:w-auto">
@@ -124,6 +133,15 @@ export function UserActionControls({
             </Button>
           </form>
         </>
+      ) : null}
+      {status !== "banned" ? (
+        <form action={banUserAction} className="w-full sm:w-auto">
+          <input type="hidden" name="userId" value={userId} />
+          <Button type="submit" variant="destructive" size="sm" className="w-full sm:w-auto">
+            <Ban aria-hidden="true" />
+            封禁
+          </Button>
+        </form>
       ) : null}
       <CreditDialog mode="add" userId={userId} email={email} credits={credits} />
       <CreditDialog mode="remove" userId={userId} email={email} credits={credits} />

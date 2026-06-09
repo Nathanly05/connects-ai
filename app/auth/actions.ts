@@ -1,13 +1,38 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-type ProfileStatus = "pending" | "approved" | "rejected";
+type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
+
+type SignupRiskCounts = {
+  ip_count: number;
+  device_count: number;
+};
+
+const frequentSignupMessage = "注册请求过于频繁，请稍后再试或联系管理员。";
+const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+async function getRequestContext() {
+  const headerStore = await headers();
+  const forwardedFor = headerStore.get("x-forwarded-for");
+  const ip =
+    headerStore.get("cf-connecting-ip") ||
+    headerStore.get("x-real-ip") ||
+    forwardedFor?.split(",")[0]?.trim() ||
+    "unknown";
+  const userAgent = headerStore.get("user-agent") || "unknown";
+
+  return {
+    ip,
+    userAgent
+  };
 }
 
 function authErrorMessage(message: string) {
@@ -45,12 +70,18 @@ function redirectByStatus(status?: ProfileStatus | null): never {
     redirect("/auth/rejected");
   }
 
+  if (status === "banned") {
+    redirectWithError("/auth/login", bannedMessage);
+  }
+
   redirect("/auth/pending");
 }
 
 export async function signUpAction(formData: FormData) {
   const email = getString(formData, "email").toLowerCase();
   const password = getString(formData, "password");
+  const deviceId = getString(formData, "deviceId") || null;
+  const { ip, userAgent } = await getRequestContext();
 
   if (!email || !password) {
     redirectWithError("/auth/register", "请填写邮箱和密码。");
@@ -61,14 +92,62 @@ export async function signUpAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data: riskRows, error: riskError } = await supabase.rpc("get_signup_risk_counts", {
+    p_ip_address: ip,
+    p_device_id: deviceId
+  });
+  const risk = Array.isArray(riskRows)
+    ? (riskRows[0] as SignupRiskCounts | undefined)
+    : (riskRows as SignupRiskCounts | null);
+
+  if (!riskError && ((risk?.ip_count ?? 0) >= 2 || (deviceId && (risk?.device_count ?? 0) >= 1))) {
+    const { data: blockedSignUpData } = await supabase.auth.signUp({
+      email,
+      password
+    });
+
+    await supabase.rpc("record_signup_attempt", {
+      p_email: email,
+      p_ip_address: ip,
+      p_user_agent: userAgent,
+      p_device_id: deviceId,
+      p_success: false,
+      p_reason: frequentSignupMessage,
+      p_user_id: blockedSignUpData.user?.id ?? null
+    });
+
+    await supabase.auth.signOut();
+    redirectWithError("/auth/register", frequentSignupMessage);
+  }
+
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password
   });
 
   if (error) {
+    await supabase.rpc("record_signup_attempt", {
+      p_email: email,
+      p_ip_address: ip,
+      p_user_agent: userAgent,
+      p_device_id: deviceId,
+      p_success: false,
+      p_reason: authErrorMessage(error.message),
+      p_user_id: null
+    });
+
     redirectWithError("/auth/register", authErrorMessage(error.message));
   }
+
+  await supabase.rpc("record_signup_attempt", {
+    p_email: email,
+    p_ip_address: ip,
+    p_user_agent: userAgent,
+    p_device_id: deviceId,
+    p_success: true,
+    p_reason: null,
+    p_user_id: signUpData.user?.id ?? null
+  });
 
   redirect("/auth/pending");
 }
@@ -76,6 +155,7 @@ export async function signUpAction(formData: FormData) {
 export async function signInAction(formData: FormData) {
   const email = getString(formData, "email").toLowerCase();
   const password = getString(formData, "password");
+  const { ip } = await getRequestContext();
 
   if (!email || !password) {
     redirectWithError("/auth/login", "请填写邮箱和密码。");
@@ -99,6 +179,19 @@ export async function signInAction(formData: FormData) {
 
   if (profileError) {
     redirectWithError("/auth/login", "账号状态暂时无法确认，请稍后再试。");
+  }
+
+  await supabase
+    .from("profiles")
+    .update({
+      last_login_ip: ip,
+      last_login_at: new Date().toISOString()
+    })
+    .eq("id", data.user.id);
+
+  if (profile?.status === "banned") {
+    await supabase.auth.signOut();
+    redirectWithError("/auth/login", bannedMessage);
   }
 
   redirectByStatus(profile?.status as ProfileStatus | undefined);
