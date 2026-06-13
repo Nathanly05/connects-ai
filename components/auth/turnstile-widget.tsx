@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Script from "next/script";
 
 type TurnstileWidgetProps = {
   action: "login" | "register";
+  onTokenChange?: (token: string) => void;
+  resetSignal?: string;
 };
 
 type TurnstileRenderOptions = {
@@ -14,6 +16,7 @@ type TurnstileRenderOptions = {
   callback: (token: string) => void;
   "expired-callback": () => void;
   "error-callback": () => void;
+  "timeout-callback": () => void;
 };
 
 declare global {
@@ -21,16 +24,38 @@ declare global {
     turnstile?: {
       render: (container: HTMLElement, options: TurnstileRenderOptions) => string;
       remove: (widgetId: string) => void;
+      reset: (widgetId: string) => void;
     };
   }
 }
 
-export function TurnstileWidget({ action }: TurnstileWidgetProps) {
+export function TurnstileWidget({
+  action,
+  onTokenChange,
+  resetSignal = ""
+}: TurnstileWidgetProps) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const didMountRef = useRef(false);
   const [scriptReady, setScriptReady] = useState(false);
   const [token, setToken] = useState("");
+
+  const updateToken = useCallback(
+    (nextToken: string) => {
+      setToken(nextToken);
+      onTokenChange?.(nextToken);
+    },
+    [onTokenChange]
+  );
+
+  const resetWidget = useCallback(() => {
+    updateToken("");
+
+    if (widgetIdRef.current && window.turnstile) {
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  }, [updateToken]);
 
   useEffect(() => {
     if (window.turnstile) {
@@ -47,9 +72,10 @@ export function TurnstileWidget({ action }: TurnstileWidgetProps) {
       sitekey: siteKey,
       action,
       theme: "light",
-      callback: setToken,
-      "expired-callback": () => setToken(""),
-      "error-callback": () => setToken("")
+      callback: updateToken,
+      "expired-callback": resetWidget,
+      "error-callback": resetWidget,
+      "timeout-callback": resetWidget
     });
 
     return () => {
@@ -57,8 +83,18 @@ export function TurnstileWidget({ action }: TurnstileWidgetProps) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
       }
+      updateToken("");
     };
-  }, [action, scriptReady, siteKey]);
+  }, [action, resetWidget, scriptReady, siteKey, updateToken]);
+
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+
+    resetWidget();
+  }, [resetSignal, resetWidget]);
 
   if (!siteKey) {
     return (

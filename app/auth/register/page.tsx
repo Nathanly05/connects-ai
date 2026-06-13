@@ -13,6 +13,7 @@ import { PageToast } from "@/components/ui/page-toast";
 type RegisterPageProps = {
   searchParams: Promise<{
     error?: string;
+    r?: string;
   }>;
 };
 
@@ -30,7 +31,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RegisterForm />
+          <RegisterForm resetSignal={params.r ?? params.error ?? ""} />
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             已有账号？{" "}

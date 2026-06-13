@@ -77,7 +77,12 @@ function authErrorMessage(message: string) {
 }
 
 function redirectWithError(path: string, message: string): never {
-  redirect(`${path}?error=${encodeURIComponent(message)}`);
+  const params = new URLSearchParams({
+    error: message,
+    r: `${Date.now()}`
+  });
+
+  redirect(`${path}?${params.toString()}`);
 }
 
 function redirectByStatus(status?: ProfileStatus | null): never {

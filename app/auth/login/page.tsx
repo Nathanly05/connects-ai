@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { LogIn } from "lucide-react";
-import { signInAction } from "@/app/auth/actions";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { TurnstileWidget } from "@/components/auth/turnstile-widget";
-import { Button } from "@/components/ui/button";
+import { LoginForm } from "@/components/auth/login-form";
 import {
   Card,
   CardContent,
@@ -11,13 +8,12 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { PageToast } from "@/components/ui/page-toast";
 
 type LoginPageProps = {
   searchParams: Promise<{
     error?: string;
+    r?: string;
   }>;
 };
 
@@ -35,35 +31,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={signInAction} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email">邮箱</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">密码</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="请输入密码"
-                required
-              />
-            </div>
-            <TurnstileWidget action="login" />
-            <Button type="submit" className="w-full">
-              <LogIn aria-hidden="true" />
-              登录
-            </Button>
-          </form>
+          <LoginForm resetSignal={params.r ?? params.error ?? ""} />
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             还没有账号？{" "}
