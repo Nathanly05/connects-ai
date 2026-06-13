@@ -38,24 +38,30 @@ export function TurnstileWidget({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
   const didMountRef = useRef(false);
+  const onTokenChangeRef = useRef<TurnstileWidgetProps["onTokenChange"]>(onTokenChange);
   const [scriptReady, setScriptReady] = useState(false);
   const [token, setToken] = useState("");
 
-  const updateToken = useCallback(
-    (nextToken: string) => {
-      setToken(nextToken);
-      onTokenChange?.(nextToken);
-    },
-    [onTokenChange]
-  );
+  useEffect(() => {
+    onTokenChangeRef.current = onTokenChange;
+  }, [onTokenChange]);
+
+  const updateToken = useCallback((nextToken: string) => {
+    setToken(nextToken);
+    onTokenChangeRef.current?.(nextToken);
+  }, []);
+
+  const clearToken = useCallback(() => {
+    updateToken("");
+  }, [updateToken]);
 
   const resetWidget = useCallback(() => {
-    updateToken("");
+    clearToken();
 
     if (widgetIdRef.current && window.turnstile) {
       window.turnstile.reset(widgetIdRef.current);
     }
-  }, [updateToken]);
+  }, [clearToken]);
 
   useEffect(() => {
     if (window.turnstile) {
@@ -72,10 +78,12 @@ export function TurnstileWidget({
       sitekey: siteKey,
       action,
       theme: "light",
-      callback: updateToken,
-      "expired-callback": resetWidget,
-      "error-callback": resetWidget,
-      "timeout-callback": resetWidget
+      callback: (turnstileToken: string) => {
+        updateToken(turnstileToken);
+      },
+      "expired-callback": clearToken,
+      "error-callback": clearToken,
+      "timeout-callback": clearToken
     });
 
     return () => {
@@ -85,7 +93,7 @@ export function TurnstileWidget({
       }
       updateToken("");
     };
-  }, [action, resetWidget, scriptReady, siteKey, updateToken]);
+  }, [action, clearToken, scriptReady, siteKey, updateToken]);
 
   useEffect(() => {
     if (!didMountRef.current) {
