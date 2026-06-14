@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { checkIpIntelligence, type IpIntelligenceResult } from "@/lib/ip-intelligence";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { verifyTurnstileToken } from "@/lib/turnstile";
 
 type ProfileStatus = "pending" | "approved" | "rejected" | "banned";
 
@@ -17,7 +16,6 @@ type RegistrationGuardCounts = {
 
 const frequentSignupMessage = "注册请求过于频繁，请稍后再试或联系管理员。";
 const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
-const turnstileErrorMessage = "请先完成人机验证";
 const suspiciousNetworkMessage = "检测到网络环境异常，请关闭 VPN 或代理后再试。";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -234,7 +232,6 @@ export async function signUpAction(formData: FormData) {
   const email = getString(formData, "email").toLowerCase();
   const password = getString(formData, "password");
   const deviceId = getString(formData, "deviceId") || null;
-  const turnstileToken = getString(formData, "cf-turnstile-response");
   const { ip, userAgent, origin } = await getRequestContext();
 
   if (!email || !password) {
@@ -267,21 +264,6 @@ export async function signUpAction(formData: FormData) {
     });
 
     redirectWithError("/auth/register", frequentSignupMessage);
-  }
-
-  const isHuman = await verifyTurnstileToken(turnstileToken, ip, "register");
-
-  if (!isHuman) {
-    await rejectRegistration(supabase, {
-      email,
-      ip,
-      userAgent,
-      deviceId,
-      reason: turnstileErrorMessage,
-      eventType: "registration_turnstile_failed"
-    });
-
-    redirectWithError("/auth/register", turnstileErrorMessage);
   }
 
   const ipIntelligence = await checkIpIntelligence(ip);
@@ -381,7 +363,6 @@ export async function signUpAction(formData: FormData) {
 export async function signInAction(formData: FormData) {
   const email = getString(formData, "email").toLowerCase();
   const password = getString(formData, "password");
-  const turnstileToken = getString(formData, "cf-turnstile-response");
   const { ip, userAgent } = await getRequestContext();
 
   if (!email || !password) {
@@ -389,22 +370,6 @@ export async function signInAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const isHuman = await verifyTurnstileToken(turnstileToken, ip, "login");
-
-  if (!isHuman) {
-    await recordAuditLog(supabase, {
-      email,
-      eventType: "login_turnstile_failed",
-      ip,
-      userAgent,
-      metadata: {
-        reason: turnstileErrorMessage
-      }
-    });
-
-    redirectWithError("/auth/login", turnstileErrorMessage);
-  }
-
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password

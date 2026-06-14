@@ -1,10 +1,9 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { UserPlus } from "lucide-react";
 import { signUpAction } from "@/app/auth/actions";
-import { TurnstileWidget } from "@/components/auth/turnstile-widget";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,9 +62,6 @@ export function RegisterForm({ resetSignal = "" }: RegisterFormProps) {
   const submittingRef = useRef(false);
   const [deviceId, setDeviceId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState("");
-  const [localResetCount, setLocalResetCount] = useState(0);
-  const [clientError, setClientError] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -84,33 +80,14 @@ export function RegisterForm({ resetSignal = "" }: RegisterFormProps) {
   useEffect(() => {
     submittingRef.current = false;
     setIsSubmitting(false);
-    setTurnstileToken("");
   }, [resetSignal]);
 
-  const handleTurnstileTokenChange = useCallback((token: string) => {
-    setTurnstileToken(token);
-
-    if (token) {
-      setClientError("");
-    }
-  }, []);
-
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    const token = new FormData(event.currentTarget).get("cf-turnstile-response");
-
     if (submittingRef.current) {
       event.preventDefault();
       return;
     }
 
-    if (typeof token !== "string" || !token) {
-      event.preventDefault();
-      setClientError("请先完成人机验证");
-      setLocalResetCount((count) => count + 1);
-      return;
-    }
-
-    setClientError("");
     submittingRef.current = true;
     setIsSubmitting(true);
   }
@@ -141,15 +118,7 @@ export function RegisterForm({ resetSignal = "" }: RegisterFormProps) {
           required
         />
       </div>
-      <TurnstileWidget
-        action="register"
-        onTokenChange={handleTurnstileTokenChange}
-        resetSignal={`${resetSignal}:${localResetCount}`}
-      />
-      {clientError ? (
-        <p className="text-sm font-medium text-destructive">{clientError}</p>
-      ) : null}
-      <SubmitButton disabled={isSubmitting || !turnstileToken} />
+      <SubmitButton disabled={isSubmitting} />
     </form>
   );
 }
