@@ -23,6 +23,7 @@ declare global {
   interface Window {
     turnstile?: {
       render: (container: HTMLElement, options: TurnstileRenderOptions) => string;
+      getResponse: (widgetId: string) => string;
       remove: (widgetId: string) => void;
       reset: (widgetId: string) => void;
     };
@@ -36,9 +37,11 @@ export function TurnstileWidget({
 }: TurnstileWidgetProps) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
   const didMountRef = useRef(false);
   const onTokenChangeRef = useRef<TurnstileWidgetProps["onTokenChange"]>(onTokenChange);
+  const tokenRef = useRef("");
   const [scriptReady, setScriptReady] = useState(false);
   const [token, setToken] = useState("");
 
@@ -47,6 +50,12 @@ export function TurnstileWidget({
   }, [onTokenChange]);
 
   const updateToken = useCallback((nextToken: string) => {
+    tokenRef.current = nextToken;
+
+    if (inputRef.current) {
+      inputRef.current.value = nextToken;
+    }
+
     setToken(nextToken);
     onTokenChangeRef.current?.(nextToken);
   }, []);
@@ -74,7 +83,7 @@ export function TurnstileWidget({
       return;
     }
 
-    widgetIdRef.current = window.turnstile.render(containerRef.current, {
+    const widgetId = window.turnstile.render(containerRef.current, {
       sitekey: siteKey,
       action,
       theme: "light",
@@ -85,8 +94,23 @@ export function TurnstileWidget({
       "error-callback": clearToken,
       "timeout-callback": clearToken
     });
+    widgetIdRef.current = widgetId;
+
+    const responseSyncInterval = window.setInterval(() => {
+      if (!window.turnstile || !widgetIdRef.current) {
+        return;
+      }
+
+      const responseToken = window.turnstile.getResponse(widgetIdRef.current);
+
+      if (responseToken && responseToken !== tokenRef.current) {
+        updateToken(responseToken);
+      }
+    }, 250);
 
     return () => {
+      window.clearInterval(responseSyncInterval);
+
       if (widgetIdRef.current && window.turnstile) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
@@ -114,7 +138,13 @@ export function TurnstileWidget({
 
   return (
     <div className="flex justify-center rounded-md border bg-secondary/40 px-3 py-3">
-      <input type="hidden" name="cf-turnstile-response" value={token} />
+      <input
+        ref={inputRef}
+        type="hidden"
+        name="cf-turnstile-response"
+        value={token}
+        readOnly
+      />
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         strategy="afterInteractive"
