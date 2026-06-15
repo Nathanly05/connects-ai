@@ -1,9 +1,10 @@
-"use server";
-
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { NextResponse, type NextRequest } from "next/server";
 import { createOpenAIClient, defaultChatModel } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type ChatMessage = {
   role: "user" | "assistant" | "system";
@@ -18,30 +19,30 @@ type RateLimitResult = {
   rate_limited: boolean;
 };
 
-const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
+type ChatRequestBody = {
+  sessionId?: string | null;
+  content?: string | null;
+};
+
 const chatCreditCost = 1;
 const maxInputCharacters = 16000;
+const remainingChatsEmptyMessage = "Remaining Chats 已用完，请购买套餐后继续使用。";
+const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
 
-function getString(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
+function jsonError(message: string, status = 400, redirectTo?: string) {
+  return NextResponse.json({ error: message, redirectTo }, { status });
 }
 
-function redirectWithChatError(sessionId: string | null, message: string): never {
-  const params = new URLSearchParams();
+function purchaseRedirect(message = remainingChatsEmptyMessage) {
+  return `/billing?error=${encodeURIComponent(message)}`;
+}
 
-  if (sessionId) {
-    params.set("session", sessionId);
-  } else {
-    params.set("new", "1");
+function authRedirect(path: string, message?: string) {
+  if (!message) {
+    return path;
   }
 
-  params.set("error", message);
-  redirect(`/chat?${params.toString()}`);
-}
-
-function redirectToUpgrade(message = "Remaining Chats 已用完，请购买套餐后继续使用。"): never {
-  redirect(`/billing?error=${encodeURIComponent(message)}`);
+  return `${path}?error=${encodeURIComponent(message)}`;
 }
 
 function titleFromMessage(message: string) {
@@ -91,7 +92,7 @@ function toOpenAIInput(messages: ChatMessage[], nextMessage: string) {
   ];
 }
 
-function friendlyError(error: unknown) {
+function friendlyOpenAIError(error: unknown) {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
 
@@ -125,16 +126,37 @@ function friendlySaveError(message?: string) {
   return "AI 服务暂时繁忙，请稍后再试。";
 }
 
-export async function sendMessageAction(formData: FormData) {
-  const sessionId = getString(formData, "sessionId") || null;
-  const content = getString(formData, "content");
+function shouldRetrySaveWithoutMode(message?: string) {
+  if (!message) {
+    return false;
+  }
+
+  return (
+    message.includes("Could not find the function") ||
+    message.includes("schema cache") ||
+    message.includes("p_mode")
+  );
+}
+
+async function parseBody(request: NextRequest): Promise<ChatRequestBody> {
+  try {
+    return (await request.json()) as ChatRequestBody;
+  } catch {
+    return {};
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const body = await parseBody(request);
+  const sessionId = body.sessionId?.trim() || null;
+  const content = body.content?.trim() || "";
 
   if (!content) {
-    redirectWithChatError(sessionId, "请输入消息内容。");
+    return jsonError("请输入消息内容。");
   }
 
   if (content.length > maxInputCharacters) {
-    redirectWithChatError(sessionId, "消息内容过长，请缩短后再发送。");
+    return jsonError("消息内容过长，请缩短后再发送。");
   }
 
   const supabase = await createClient();
@@ -143,7 +165,7 @@ export async function sendMessageAction(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/login");
+    return jsonError("请先登录。", 401, "/auth/login");
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -153,26 +175,26 @@ export async function sendMessageAction(formData: FormData) {
     .maybeSingle();
 
   if (profileError) {
-    redirectWithChatError(sessionId, "账号信息暂时无法加载，请稍后再试。");
+    return jsonError("账号信息暂时无法加载，请稍后再试。", 500);
   }
 
   if (profile?.status === "banned") {
     await supabase.auth.signOut();
-    redirect(`/auth/login?error=${encodeURIComponent(bannedMessage)}`);
+    return jsonError(bannedMessage, 403, authRedirect("/auth/login", bannedMessage));
   }
 
   if (profile?.status === "rejected") {
-    redirect("/auth/rejected");
+    return jsonError("账号申请未通过，如需帮助请联系管理员。", 403, "/auth/rejected");
   }
 
   if (profile?.status !== "approved") {
-    redirect("/auth/pending");
+    return jsonError("账号正在审核中，请等待管理员开通。", 403, "/auth/pending");
   }
 
   const currentCredits = profile?.credits ?? 0;
 
   if (currentCredits < chatCreditCost) {
-    redirectToUpgrade();
+    return jsonError(remainingChatsEmptyMessage, 402, purchaseRedirect());
   }
 
   const { data: rateLimitRows, error: rateLimitError } = await supabase.rpc(
@@ -182,16 +204,16 @@ export async function sendMessageAction(formData: FormData) {
     }
   );
 
-  if (rateLimitError) {
-    redirectWithChatError(sessionId, "发送暂时不可用，请稍后再试。");
-  }
+  if (!rateLimitError) {
+    const rateLimit = Array.isArray(rateLimitRows)
+      ? (rateLimitRows[0] as RateLimitResult | undefined)
+      : (rateLimitRows as RateLimitResult | null);
 
-  const rateLimit = Array.isArray(rateLimitRows)
-    ? (rateLimitRows[0] as RateLimitResult | undefined)
-    : (rateLimitRows as RateLimitResult | null);
-
-  if (!rateLimit?.allowed) {
-    redirectWithChatError(sessionId, rateLimit?.reason || "发送过快，请稍后再试");
+    if (!rateLimit?.allowed) {
+      return jsonError(rateLimit?.reason || "发送过快，请稍后再试", 429);
+    }
+  } else {
+    console.error("check_chat_rate_limit failed; continuing chat send", rateLimitError);
   }
 
   let previousMessages: ChatMessage[] = [];
@@ -205,7 +227,7 @@ export async function sendMessageAction(formData: FormData) {
       .maybeSingle();
 
     if (!session) {
-      redirectWithChatError(null, "对话不存在，请重新开始。");
+      return jsonError("对话不存在，请重新开始。", 404);
     }
 
     const { data: messages, error: messagesError } = await supabase
@@ -215,7 +237,7 @@ export async function sendMessageAction(formData: FormData) {
       .order("created_at", { ascending: true });
 
     if (messagesError) {
-      redirectWithChatError(sessionId, "消息暂时无法加载，请稍后重试。");
+      return jsonError("消息暂时无法加载，请稍后重试。", 500);
     }
 
     previousMessages = (messages ?? []) as ChatMessage[];
@@ -235,29 +257,38 @@ export async function sendMessageAction(formData: FormData) {
 
     assistantContent = response.output_text?.trim() || "";
   } catch (error) {
-    redirectWithChatError(sessionId, friendlyError(error));
+    return jsonError(friendlyOpenAIError(error), 502);
   }
 
   if (!assistantContent) {
-    redirectWithChatError(sessionId, "AI 服务暂时繁忙，请稍后再试。");
+    return jsonError("AI 服务暂时繁忙，请稍后再试。", 502);
   }
 
-  const { data: savedRows, error: saveError } = await supabase.rpc("save_chat_exchange", {
+  const saveParams = {
     p_session_id: sessionId,
     p_user_content: content,
     p_assistant_content: assistantContent,
-    p_title: titleFromMessage(content),
+    p_title: titleFromMessage(content)
+  };
+  let { data: savedRows, error: saveError } = await supabase.rpc("save_chat_exchange", {
+    ...saveParams,
     p_mode: "instant"
   });
+
+  if (saveError && shouldRetrySaveWithoutMode(saveError.message)) {
+    const retryResult = await supabase.rpc("save_chat_exchange", saveParams);
+    savedRows = retryResult.data;
+    saveError = retryResult.error;
+  }
 
   if (saveError) {
     const message = friendlySaveError(saveError.message);
 
     if (message.includes("Remaining Chats")) {
-      redirectToUpgrade(message);
+      return jsonError(message, 402, purchaseRedirect(message));
     }
 
-    redirectWithChatError(sessionId, message);
+    return jsonError(message, 500);
   }
 
   const savedSessionId = Array.isArray(savedRows)
@@ -265,5 +296,9 @@ export async function sendMessageAction(formData: FormData) {
     : savedRows?.session_id;
 
   revalidatePath("/chat");
-  redirect(`/chat?session=${savedSessionId ?? sessionId}`);
+
+  return NextResponse.json({
+    sessionId: savedSessionId ?? sessionId,
+    remainingChats: Array.isArray(savedRows) ? savedRows[0]?.credits : savedRows?.credits
+  });
 }
