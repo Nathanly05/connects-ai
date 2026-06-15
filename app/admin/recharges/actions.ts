@@ -46,7 +46,7 @@ export async function approveRechargeAction(formData: FormData) {
     redirectWithMessage("error", friendlyError(error.message));
   }
 
-  redirectWithMessage("success", "充值申请已批准，credits 已发放。");
+  redirectWithMessage("success", "充值申请已批准，对话次数已发放。");
 }
 
 export async function rejectRechargeAction(formData: FormData) {

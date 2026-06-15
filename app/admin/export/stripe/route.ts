@@ -48,7 +48,7 @@ export async function GET() {
 
   return csvResponse(
     "connects-ai-stripe-orders.csv",
-    ["邮箱", "套餐", "金额 GBP", "Credits", "状态", "创建时间"],
+    ["邮箱", "套餐", "金额", "Chats", "状态", "创建时间"],
     rows
   );
 }

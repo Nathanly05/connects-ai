@@ -31,7 +31,7 @@ type SupportPageProps = {
   }>;
 };
 
-const supportTypes = ["账号问题", "充值问题", "AI回复问题", "Credits问题", "其他"];
+const supportTypes = ["账号问题", "充值问题", "AI回复问题", "剩余次数问题", "其他"];
 
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const params = await searchParams;
@@ -61,7 +61,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
               <Badge variant="secondary">Support</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              提交账号、充值、AI 回复或 Credits 相关问题，我们会尽快处理。
+              提交账号、充值、AI 回复或 Remaining Chats 相关问题，我们会尽快处理。
             </p>
           </div>
         </header>
@@ -97,7 +97,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                 <Input
                   id="title"
                   name="title"
-                  placeholder="例如：Stripe 支付后 Credits 未到账"
+                  placeholder="例如：Stripe 支付后 Remaining Chats 未到账"
                   required
                 />
               </div>

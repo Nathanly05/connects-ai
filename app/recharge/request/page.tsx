@@ -56,7 +56,7 @@ export default async function RechargeRequestPage({
               <Badge variant="secondary">GlobePay</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              付款后提交信息，管理员审核通过后 credits 会到账。
+              付款后提交信息，管理员审核通过后 Remaining Chats 会到账。
             </p>
           </div>
           <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -82,12 +82,12 @@ export default async function RechargeRequestPage({
                   id="packageName"
                   name="packageName"
                   className="flex h-11 w-full rounded-md border border-input bg-white px-3 py-2 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
-                  defaultValue="Pro"
+                  defaultValue="Standard"
                   required
                 >
                   {billingPlans.map((plan) => (
                     <option key={plan.id} value={plan.name}>
-                      {plan.name} - {plan.priceLabel} - {plan.credits} credits
+                      {plan.name} - {plan.priceLabel} - {plan.credits} chats
                     </option>
                   ))}
                 </select>
@@ -102,7 +102,7 @@ export default async function RechargeRequestPage({
                     type="number"
                     min="0.01"
                     step="0.01"
-                    placeholder="例如：9.99"
+                    placeholder="例如：39"
                     required
                   />
                 </div>

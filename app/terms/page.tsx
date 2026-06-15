@@ -15,7 +15,7 @@ export default function TermsPage() {
         <h2 className="text-base font-semibold text-foreground">平台说明</h2>
         <p>
           Connects AI 是一个 AI 工具平台，面向中文用户提供 AI 聊天、智能创作和相关
-          Credits 使用服务。
+          Remaining Chats 使用服务。
         </p>
       </section>
 
@@ -51,9 +51,9 @@ export default function TermsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">Credits 说明</h2>
+        <h2 className="text-base font-semibold text-foreground">Remaining Chats 说明</h2>
         <p>
-          Credits 为 Connects AI 平台内使用额度，可用于发起 AI 对话和相关功能消耗，
+          Remaining Chats 为 Connects AI 平台内使用额度，可用于发起 AI 对话，
           不代表现金账户、存款、证券或其他金融资产。
         </p>
       </section>

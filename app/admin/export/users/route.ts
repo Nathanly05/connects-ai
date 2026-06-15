@@ -36,7 +36,7 @@ export async function GET() {
 
   return csvResponse(
     "connects-ai-users.csv",
-    ["邮箱", "角色", "状态", "Credits", "创建时间"],
+    ["邮箱", "角色", "状态", "Remaining Chats", "创建时间"],
     rows
   );
 }

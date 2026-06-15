@@ -15,14 +15,14 @@ export default function RefundPage() {
         <h2 className="text-base font-semibold text-foreground">Stripe 支付</h2>
         <p>
           通过 Stripe 完成的支付，如需退款，可联系客服处理。平台会根据订单状态、
-          Credits 使用情况和支付渠道规则进行核实。
+          Remaining Chats 使用情况和支付渠道规则进行核实。
         </p>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-foreground">Credits 使用后退款</h2>
+        <h2 className="text-base font-semibold text-foreground">Remaining Chats 使用后退款</h2>
         <p>
-          已大量使用的 Credits 一般不支持退款。若存在异常扣费、重复付款或其他特殊情况，
+          已大量使用的 Remaining Chats 一般不支持退款。若存在异常扣费、重复付款或其他特殊情况，
           请尽快联系管理员核实。
         </p>
       </section>

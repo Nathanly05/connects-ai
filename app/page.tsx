@@ -1,14 +1,5 @@
 import Link from "next/link";
-import {
-  Bot,
-  Brain,
-  CheckCircle2,
-  CreditCard,
-  MessageCircle,
-  QrCode,
-  ShieldCheck,
-  Sparkles
-} from "lucide-react";
+import { Bot, CheckCircle2, CreditCard, MessageCircle, QrCode, ShieldCheck, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,8 +43,8 @@ export default function HomePage() {
               Connects AI
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
-              一个面向中文用户的 AI 聊天与智能创作平台，支持高速对话、深度思考、
-              Credits 管理，以及 Stripe / 微信支付宝充值。
+              一个面向中文用户的 AI 聊天与智能创作平台，支持高速对话、
+              Remaining Chats 管理，以及 Stripe / 微信支付宝充值。
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Button asChild size="lg" className="w-full sm:w-auto">
@@ -107,20 +98,20 @@ export default function HomePage() {
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               <CheckCircle2 className="mr-2 inline size-4 text-primary" aria-hidden="true" />
-              Instant 模式快速响应。
+              快速响应中文用户的日常创作与问答需求。
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <Brain className="mb-2 size-9 text-primary" aria-hidden="true" />
-              <CardTitle>深度思考模式</CardTitle>
+              <ShieldCheck className="mb-2 size-9 text-primary" aria-hidden="true" />
+              <CardTitle>内测审核机制</CardTitle>
               <CardDescription>
-                Thinking 模式用于更复杂的问题分析和结构化输出。
+                小范围用户审核开通，帮助保持稳定和可控的使用体验。
               </CardDescription>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               <CheckCircle2 className="mr-2 inline size-4 text-primary" aria-hidden="true" />
-              根据模式自动扣除 Credits。
+              新用户通过审核后获得初始对话次数。
             </CardContent>
           </Card>
           <Card>
@@ -133,7 +124,7 @@ export default function HomePage() {
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               <CheckCircle2 className="mr-2 inline size-4 text-primary" aria-hidden="true" />
-              账户页可查看充值和 Credits 记录。
+              账户页可查看购买和 Remaining Chats 记录。
             </CardContent>
           </Card>
         </section>

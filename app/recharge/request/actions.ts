@@ -3,12 +3,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-type GlobePayPackage = "Starter" | "Pro" | "Max";
+type GlobePayPackage = "Basic" | "Standard" | "Premium";
 
 const packageCredits: Record<GlobePayPackage, number> = {
-  Starter: 100,
-  Pro: 500,
-  Max: 1500
+  Basic: 50,
+  Standard: 300,
+  Premium: 1000
 };
 
 function getString(formData: FormData, key: string) {
@@ -21,7 +21,7 @@ function redirectWithMessage(type: "success" | "error", message: string): never 
 }
 
 function isGlobePayPackage(value: string): value is GlobePayPackage {
-  return value === "Starter" || value === "Pro" || value === "Max";
+  return value === "Basic" || value === "Standard" || value === "Premium";
 }
 
 export async function submitGlobePayRechargeRequestAction(formData: FormData) {

@@ -58,7 +58,7 @@ type AdminSupportPageProps = {
 };
 
 type TicketStatusFilter = "all" | TicketStatus;
-type TicketTypeFilter = "all" | "账号问题" | "充值问题" | "AI回复问题" | "Credits问题" | "其他";
+type TicketTypeFilter = "all" | "账号问题" | "充值问题" | "AI回复问题" | "剩余次数问题" | "Credits问题" | "其他";
 
 const ticketStatuses: Array<{
   value: TicketStatus;
@@ -77,7 +77,8 @@ const ticketTypes: Array<{
   { value: "账号问题", label: "账号问题" },
   { value: "充值问题", label: "充值问题" },
   { value: "AI回复问题", label: "AI回复问题" },
-  { value: "Credits问题", label: "Credits问题" },
+  { value: "剩余次数问题", label: "剩余次数问题" },
+  { value: "Credits问题", label: "Credits问题（历史）" },
   { value: "其他", label: "其他" }
 ];
 
@@ -138,6 +139,7 @@ function getTicketTypeFilter(value?: string): TicketTypeFilter {
     value === "账号问题" ||
     value === "充值问题" ||
     value === "AI回复问题" ||
+    value === "剩余次数问题" ||
     value === "Credits问题" ||
     value === "其他"
   ) {

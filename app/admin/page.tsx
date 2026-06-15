@@ -82,7 +82,13 @@ type CreditLog = {
 };
 
 type PaymentAmount = {
+  user_id?: string | null;
   amount_gbp: number | string | null;
+};
+
+type RechargeAmount = {
+  user_id: string;
+  amount: number | string | null;
 };
 
 type MessageUsage = {
@@ -126,9 +132,10 @@ function formatInteger(value: number) {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-GB", {
+  return new Intl.NumberFormat("zh-CN", {
     style: "currency",
-    currency: "GBP"
+    currency: "CNY",
+    currencyDisplay: "narrowSymbol"
   }).format(value);
 }
 
@@ -290,6 +297,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     profilesResult,
     todayUsageResult,
     todayStripeOrdersResult,
+    allStripeOrdersResult,
+    approvedRechargeRevenueResult,
+    totalChatMessagesResult,
     pendingRechargeResult,
     recentRechargesResult,
     recentCreditLogsResult
@@ -307,6 +317,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       .select("amount_gbp")
       .eq("status", "paid")
       .gte("created_at", todayStartIso),
+    supabase
+      .from("payment_orders")
+      .select("user_id, amount_gbp")
+      .eq("status", "paid"),
+    supabase
+      .from("recharge_requests")
+      .select("user_id, amount")
+      .eq("status", "approved"),
+    supabase
+      .from("chat_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "user"),
     supabase
       .from("recharge_requests")
       .select("id", { count: "exact", head: true })
@@ -328,6 +350,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const recentCreditLogs = (recentCreditLogsResult.data ?? []) as CreditLog[];
   const recentUsers = users.slice(0, 10);
   const todayUsageRows = (todayUsageResult.data ?? []) as MessageUsage[];
+  const allStripeOrders = (allStripeOrdersResult.data ?? []) as PaymentAmount[];
+  const approvedRechargeRows = (approvedRechargeRevenueResult.data ?? []) as RechargeAmount[];
   const emailByUserId = new Map(users.map((profile) => [profile.id, profile.email]));
 
   const pendingCount = users.filter((profile) => profile.status === "pending").length;
@@ -341,6 +365,22 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     (total, order) => total + Number(order.amount_gbp ?? 0),
     0
   );
+  const totalStripeRevenue = allStripeOrders.reduce(
+    (total, order) => total + Number(order.amount_gbp ?? 0),
+    0
+  );
+  const totalGlobePayRevenue = approvedRechargeRows.reduce(
+    (total, request) => total + Number(request.amount ?? 0),
+    0
+  );
+  const totalRevenue = totalStripeRevenue + totalGlobePayRevenue;
+  const totalPaidUsers = new Set(
+    [
+      ...allStripeOrders.map((order) => order.user_id),
+      ...approvedRechargeRows.map((request) => request.user_id)
+    ].filter(Boolean)
+  ).size;
+  const totalChatsUsed = totalChatMessagesResult.count ?? 0;
   const todayMessageCount = todayUsageRows.reduce(
     (total, row) => total + Number(row.message_count ?? 0),
     0
@@ -359,9 +399,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     profilesResult.error ? "用户数据暂时无法加载，请稍后重试。" : null,
     todayUsageResult.error ? "今日使用统计暂时无法加载，请稍后重试。" : null,
     todayStripeOrdersResult.error ? "今日 Stripe 数据暂时无法加载，请稍后重试。" : null,
+    allStripeOrdersResult.error ? "Stripe 总收入数据暂时无法加载，请稍后重试。" : null,
+    approvedRechargeRevenueResult.error ? "GlobePay 总收入数据暂时无法加载，请稍后重试。" : null,
+    totalChatMessagesResult.error ? "总聊天使用量暂时无法加载，请稍后重试。" : null,
     pendingRechargeResult.error ? "GlobePay 申请数据暂时无法加载，请稍后重试。" : null,
     recentRechargesResult.error ? "最近充值申请暂时无法加载，请稍后重试。" : null,
-    recentCreditLogsResult.error ? "最近 Credits 变动暂时无法加载，请稍后重试。" : null
+    recentCreditLogsResult.error ? "最近对话次数变动暂时无法加载，请稍后重试。" : null
   ].filter(Boolean);
 
   return (
@@ -381,7 +424,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               <Badge variant="secondary">运营看板</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              查看用户、聊天、充值和 credits 变动，并继续处理审核操作。
+              查看用户、聊天、充值和对话次数变动，并继续处理审核操作。
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -439,9 +482,27 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           />
           <DashboardCard
             icon={Coins}
-            label="总 Credits 余额"
+            label="总 Remaining Chats"
             value={formatInteger(totalCredits)}
             description="所有用户当前余额"
+          />
+          <DashboardCard
+            icon={WalletCards}
+            label="总付费用户"
+            value={formatInteger(totalPaidUsers)}
+            description="Stripe paid 或 GlobePay approved"
+          />
+          <DashboardCard
+            icon={MessageSquareText}
+            label="总聊天使用量"
+            value={formatInteger(totalChatsUsed)}
+            description="chat_messages 用户消息数"
+          />
+          <DashboardCard
+            icon={CreditCard}
+            label="总收入"
+            value={formatCurrency(totalRevenue)}
+            description="Stripe + GlobePay 已完成"
           />
           <DashboardCard
             icon={UserPlus}
@@ -514,12 +575,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               <ExportButton
                 href="/admin/export/users"
                 label="导出用户列表 CSV"
-                description="email、role、status、credits"
+                description="email、role、status、chats"
               />
               <ExportButton
                 href="/admin/export/stripe"
                 label="导出 Stripe 订单 CSV"
-                description="套餐、金额、credits、状态"
+                description="套餐、金额、chats、状态"
               />
               <ExportButton
                 href="/admin/export/recharges"
@@ -528,7 +589,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               />
               <ExportButton
                 href="/admin/export/credits"
-                label="导出 Credits 记录 CSV"
+                label="导出对话次数记录 CSV"
                 description="变动数量、原因、创建时间"
               />
             </div>
@@ -611,12 +672,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               <div className="mb-1 flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <Activity className="size-5" aria-hidden="true" />
               </div>
-              <CardTitle className="text-lg">最近 Credits 变动</CardTitle>
+              <CardTitle className="text-lg">最近对话次数变动</CardTitle>
               <CardDescription>最近 10 条 credit_logs 记录。</CardDescription>
             </CardHeader>
             <CardContent>
               {recentCreditLogs.length === 0 ? (
-                <EmptyState>暂无 Credits 变动记录。</EmptyState>
+                <EmptyState>暂无对话次数变动记录。</EmptyState>
               ) : (
                 <>
                   <div className="hidden overflow-x-auto rounded-lg border md:block">
@@ -711,7 +772,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         <TableHead>邮箱</TableHead>
                         <TableHead>角色</TableHead>
                         <TableHead>状态</TableHead>
-                        <TableHead>Credits</TableHead>
+                        <TableHead>Chats</TableHead>
                         <TableHead>注册时间</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -753,7 +814,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           <Badge variant={statusVariant(profile.status)}>
                             {statusLabel(profile.status)}
                           </Badge>
-                          <Badge variant="outline">{formatInteger(profile.credits)} credits</Badge>
+                          <Badge variant="outline">{formatInteger(profile.credits)} chats</Badge>
                         </div>
                         <DetailRow label="注册时间">{formatDate(profile.created_at)}</DetailRow>
                       </div>
@@ -796,7 +857,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         <TableHead>邮箱</TableHead>
                         <TableHead>角色</TableHead>
                         <TableHead>状态</TableHead>
-                        <TableHead>Credits</TableHead>
+                        <TableHead>Chats</TableHead>
                         <TableHead>注册时间</TableHead>
                         <TableHead className="min-w-[300px]">操作</TableHead>
                       </TableRow>
@@ -850,7 +911,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                           <Badge variant={statusVariant(profile.status)}>
                             {statusLabel(profile.status)}
                           </Badge>
-                          <Badge variant="outline">{formatInteger(profile.credits)} credits</Badge>
+                          <Badge variant="outline">{formatInteger(profile.credits)} chats</Badge>
                         </div>
                         <AdminUserActionControls
                           userId={profile.id}

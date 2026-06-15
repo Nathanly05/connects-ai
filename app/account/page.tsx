@@ -96,9 +96,10 @@ function formatDate(value: string) {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-GB", {
+  return new Intl.NumberFormat("zh-CN", {
     style: "currency",
-    currency: "GBP"
+    currency: "CNY",
+    currencyDisplay: "narrowSymbol"
   }).format(value);
 }
 
@@ -212,7 +213,7 @@ export default async function AccountPage() {
     stripeResult.error || globePayResult.error
       ? "充值记录暂时无法加载，请稍后重试。"
       : null,
-    creditLogsResult.error ? "Credits 记录暂时无法加载，请稍后重试。" : null
+    creditLogsResult.error ? "Remaining Chats 记录暂时无法加载，请稍后重试。" : null
   ].filter(Boolean);
 
   return (
@@ -263,7 +264,7 @@ export default async function AccountPage() {
               <DetailRow label="用户状态">
                 <Badge variant={statusVariant(profileStatus)}>{profileStatus}</Badge>
               </DetailRow>
-              <DetailRow label="当前 Credits">{formatInteger(profileCredits)} Credits</DetailRow>
+              <DetailRow label="Remaining Chats">{formatInteger(profileCredits)} chats</DetailRow>
               <DetailRow label="注册时间">{formatDate(profileCreatedAt)}</DetailRow>
             </CardContent>
           </Card>
@@ -286,7 +287,7 @@ export default async function AccountPage() {
               <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/billing">
                   <CreditCard aria-hidden="true" />
-                  自动充值
+                  自动购买
                 </Link>
               </Button>
               <Button asChild variant="outline" className="w-full justify-start">
@@ -331,7 +332,7 @@ export default async function AccountPage() {
                         <TableHead>来源</TableHead>
                         <TableHead>套餐</TableHead>
                         <TableHead>金额</TableHead>
-                        <TableHead>Credits</TableHead>
+                        <TableHead>Chats</TableHead>
                         <TableHead>状态</TableHead>
                         <TableHead>创建时间</TableHead>
                       </TableRow>
@@ -366,7 +367,7 @@ export default async function AccountPage() {
                           <Badge variant="secondary">{record.source}</Badge>
                         </div>
                         <DetailRow label="金额">{formatCurrency(record.amount)}</DetailRow>
-                        <DetailRow label="Credits">
+                        <DetailRow label="Chats">
                           {record.credits === null ? "待确认" : formatInteger(record.credits)}
                         </DetailRow>
                         <DetailRow label="状态">
@@ -387,12 +388,12 @@ export default async function AccountPage() {
             <div className="mb-2 flex size-11 items-center justify-center rounded-md bg-primary/10 text-primary">
               <WalletCards className="size-5" aria-hidden="true" />
             </div>
-            <CardTitle>Credits 记录</CardTitle>
-            <CardDescription>最近 10 条 credits 增加或扣除记录。</CardDescription>
+            <CardTitle>Remaining Chats 记录</CardTitle>
+            <CardDescription>最近 10 条对话次数增加或扣除记录。</CardDescription>
           </CardHeader>
           <CardContent>
             {creditLogs.length === 0 ? (
-              <EmptyState>暂无 Credits 变动记录。</EmptyState>
+              <EmptyState>暂无 Remaining Chats 变动记录。</EmptyState>
             ) : (
               <>
                 <div className="hidden rounded-lg border md:block">

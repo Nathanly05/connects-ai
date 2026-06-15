@@ -48,7 +48,7 @@ function PageHeader({
         <div className="flex flex-wrap items-center gap-2">
           <CreditCard className="size-5 text-primary" aria-hidden="true" />
           <h1 className="text-xl font-semibold tracking-normal">{title}</h1>
-          <Badge variant="secondary">Credits 充值</Badge>
+          <Badge variant="secondary">购买对话次数</Badge>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
@@ -75,7 +75,7 @@ function PaymentMethodChooser({ basePath }: { basePath: "/billing" | "/recharge"
             </div>
             <CardTitle>Stripe 自动充值</CardTitle>
             <CardDescription>
-              适合海外银行卡，支付成功后 credits 自动到账
+              适合海外银行卡，支付成功后 Remaining Chats 自动到账
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -115,7 +115,7 @@ function StripePlans({ basePath }: { basePath: "/billing" | "/recharge" }) {
         <div>
           <h2 className="text-lg font-semibold tracking-normal">Stripe 自动充值</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            选择套餐后进入 Stripe Checkout，支付成功后 credits 自动到账。
+            选择套餐后进入 Stripe Checkout，支付成功后 Remaining Chats 自动到账。
           </p>
         </div>
         <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -130,6 +130,7 @@ function StripePlans({ basePath }: { basePath: "/billing" | "/recharge" }) {
         {billingPlans.map((plan) => (
           <Card key={plan.id} className="overflow-hidden">
             <CardHeader>
+              {plan.badge ? <Badge className="w-fit">{plan.badge}</Badge> : null}
               <CardTitle>{plan.name}</CardTitle>
               <CardDescription>Stripe Checkout 一次性购买。</CardDescription>
             </CardHeader>
@@ -137,13 +138,13 @@ function StripePlans({ basePath }: { basePath: "/billing" | "/recharge" }) {
               <div>
                 <p className="text-3xl font-semibold tracking-normal">{plan.priceLabel}</p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {plan.credits} credits
+                  {plan.credits} chats
                 </p>
               </div>
               <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <Check className="size-4 text-primary" aria-hidden="true" />
-                  支付成功后自动到账
+                  支付成功后自动增加 Remaining Chats
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="size-4 text-primary" aria-hidden="true" />
@@ -214,7 +215,7 @@ function GlobePayInstructions({ basePath }: { basePath: "/billing" | "/recharge"
               <Card key={plan.id}>
                 <CardHeader>
                   <CardTitle className="text-lg">{plan.name}</CardTitle>
-                  <CardDescription>{plan.credits} credits</CardDescription>
+                  <CardDescription>{plan.credits} chats</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-semibold tracking-normal">{plan.priceLabel}</p>
@@ -233,7 +234,7 @@ function GlobePayInstructions({ basePath }: { basePath: "/billing" | "/recharge"
                 <li>1. 请扫码付款</li>
                 <li>2. 付款时备注你的注册邮箱</li>
                 <li>3. 付款后等待管理员审核</li>
-                <li>4. 审核通过后 credits 会到账</li>
+                <li>4. 审核通过后 Remaining Chats 会到账</li>
               </ol>
               <Button asChild className="w-full">
                 <Link href="/recharge/request">提交充值申请</Link>
@@ -257,7 +258,7 @@ export function PaymentMethodPage({
   const toastMessage = error
     ? error
     : success
-      ? "支付已完成。Stripe webhook 处理后 credits 会自动到账。"
+      ? "支付已完成。Stripe webhook 处理后 Remaining Chats 会自动到账。"
       : canceled
         ? "支付已取消，可以重新选择套餐。"
         : null;

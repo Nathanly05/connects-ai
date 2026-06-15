@@ -3,7 +3,7 @@ import "./globals.css";
 
 const siteTitle = "Connects AI - 中文 AI 助手平台";
 const siteDescription =
-  "一个面向中文用户的 AI 聊天与智能创作平台，支持高速对话、深度思考、充值管理和多种支付方式。";
+  "一个面向中文用户的 AI 聊天与智能创作平台，支持高速对话、Remaining Chats 管理和多种支付方式。";
 const siteUrl = getSiteUrl();
 
 function getSiteUrl() {

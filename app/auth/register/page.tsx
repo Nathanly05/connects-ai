@@ -27,7 +27,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
         <CardHeader>
           <CardTitle>创建内测账号</CardTitle>
           <CardDescription>
-            注册后账号会进入审核队列，通过后按风控规则发放初始 10 credits。
+            注册后账号会进入审核队列，通过后按风控规则发放初始 10 chats。
           </CardDescription>
         </CardHeader>
         <CardContent>

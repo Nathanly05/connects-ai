@@ -30,7 +30,7 @@ function friendlyError(message?: string) {
   }
 
   if (message.includes("Credits cannot be less than 0")) {
-    return "扣减失败：用户 credits 不能小于 0。";
+    return "扣减失败：用户对话次数不能小于 0。";
   }
 
   if (message.includes("Only approved admins")) {
@@ -38,7 +38,7 @@ function friendlyError(message?: string) {
   }
 
   if (message.includes("function public.admin_remove_credits")) {
-    return "Credits 操作暂时不可用，请稍后再试。";
+    return "对话次数操作暂时不可用，请稍后再试。";
   }
 
   return "操作失败，请稍后再试。";
@@ -130,7 +130,7 @@ export async function addCreditsAction(formData: FormData) {
   }
 
   if (!amount) {
-    redirectWithMessage("error", "credits 数量必须是大于 0 的整数。");
+    redirectWithMessage("error", "对话次数必须是大于 0 的整数。");
   }
 
   const supabase = await createClient();
@@ -144,7 +144,7 @@ export async function addCreditsAction(formData: FormData) {
     redirectWithMessage("error", friendlyError(error.message));
   }
 
-  redirectWithMessage("success", `已为用户增加 ${amount} credits。`);
+  redirectWithMessage("success", `已为用户增加 ${amount} 次对话。`);
 }
 
 export async function removeCreditsAction(formData: FormData) {
@@ -157,7 +157,7 @@ export async function removeCreditsAction(formData: FormData) {
   }
 
   if (!amount) {
-    redirectWithMessage("error", "credits 数量必须是大于 0 的整数。");
+    redirectWithMessage("error", "对话次数必须是大于 0 的整数。");
   }
 
   const supabase = await createClient();
@@ -171,5 +171,5 @@ export async function removeCreditsAction(formData: FormData) {
     redirectWithMessage("error", friendlyError(error.message));
   }
 
-  redirectWithMessage("success", `已为用户减少 ${amount} credits。`);
+  redirectWithMessage("success", `已为用户减少 ${amount} 次对话。`);
 }

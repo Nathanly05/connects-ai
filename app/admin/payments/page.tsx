@@ -87,6 +87,14 @@ function statusVariant(status: PaymentStatus) {
   return "secondary";
 }
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
+    currencyDisplay: "narrowSymbol"
+  }).format(value);
+}
+
 function SummaryItem({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border bg-white px-4 py-3 shadow-sm">
@@ -154,7 +162,7 @@ export default async function AdminPaymentsPage() {
               <Badge variant="secondary">自动充值</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              查看 Stripe Checkout 订单状态和 credits 发放情况。
+              查看 Stripe Checkout 订单状态和对话次数发放情况。
             </p>
           </div>
         </header>
@@ -192,7 +200,7 @@ export default async function AdminPaymentsPage() {
                         <TableHead>用户</TableHead>
                         <TableHead>金额</TableHead>
                         <TableHead>套餐</TableHead>
-                        <TableHead>Credits</TableHead>
+                        <TableHead>Chats</TableHead>
                         <TableHead>状态</TableHead>
                         <TableHead>时间</TableHead>
                       </TableRow>
@@ -203,7 +211,7 @@ export default async function AdminPaymentsPage() {
                           <TableCell className="font-medium">
                             {emailByUserId.get(order.user_id) ?? order.user_id}
                           </TableCell>
-                          <TableCell>£{Number(order.amount_gbp).toFixed(2)}</TableCell>
+                          <TableCell>{formatCurrency(Number(order.amount_gbp))}</TableCell>
                           <TableCell>{order.plan_name}</TableCell>
                           <TableCell>{order.credits}</TableCell>
                           <TableCell>
@@ -233,9 +241,11 @@ export default async function AdminPaymentsPage() {
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline">£{Number(order.amount_gbp).toFixed(2)}</Badge>
+                          <Badge variant="outline">
+                            {formatCurrency(Number(order.amount_gbp))}
+                          </Badge>
                           <Badge variant="outline">{order.plan_name}</Badge>
-                          <Badge variant="outline">{order.credits} credits</Badge>
+                          <Badge variant="outline">{order.credits} chats</Badge>
                           <Badge variant={statusVariant(order.status)}>
                             {statusLabel(order.status)}
                           </Badge>

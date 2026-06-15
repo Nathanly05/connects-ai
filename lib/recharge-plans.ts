@@ -1,4 +1,4 @@
-export type RechargePlanId = "starter" | "standard" | "pro";
+export type RechargePlanId = "basic" | "standard" | "premium";
 
 export type RechargePlan = {
   id: RechargePlanId;
@@ -11,25 +11,25 @@ export type RechargePlan = {
 
 export const rechargePlans: RechargePlan[] = [
   {
-    id: "starter",
-    name: "Starter",
+    id: "basic",
+    name: "Basic",
     amount: 9.9,
-    priceLabel: "9.9 RMB",
+    priceLabel: "¥9.9",
     credits: 50
   },
   {
     id: "standard",
     name: "Standard",
-    amount: 29.9,
-    priceLabel: "29.9 RMB",
-    credits: 200,
-    badge: "🔥 最受欢迎"
+    amount: 39,
+    priceLabel: "¥39",
+    credits: 300,
+    badge: "推荐"
   },
   {
-    id: "pro",
-    name: "Pro",
+    id: "premium",
+    name: "Premium",
     amount: 99,
-    priceLabel: "99 RMB",
+    priceLabel: "¥99",
     credits: 1000
   }
 ];

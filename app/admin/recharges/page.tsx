@@ -111,6 +111,14 @@ function statusVariant(status: RechargeStatus) {
   return "secondary";
 }
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("zh-CN", {
+    style: "currency",
+    currency: "CNY",
+    currencyDisplay: "narrowSymbol"
+  }).format(value);
+}
+
 function SummaryItem({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border bg-white px-4 py-3 shadow-sm">
@@ -200,7 +208,7 @@ export default async function AdminRechargesPage({
               <Badge variant="secondary">GlobePay</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              审核微信/支付宝扫码付款申请，批准后自动发放 credits。
+              审核微信/支付宝扫码付款申请，批准后自动发放对话次数。
             </p>
           </div>
         </header>
@@ -285,7 +293,7 @@ export default async function AdminRechargesPage({
                             {request.email ?? request.user_id}
                           </TableCell>
                           <TableCell>{request.package_name ?? "未填写"}</TableCell>
-                          <TableCell>£{Number(request.amount).toFixed(2)}</TableCell>
+                          <TableCell>{formatCurrency(Number(request.amount))}</TableCell>
                           <TableCell className="text-muted-foreground">
                             {formatDate(request.created_at)}
                           </TableCell>
@@ -321,7 +329,9 @@ export default async function AdminRechargesPage({
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline">{request.package_name ?? "未填写"}</Badge>
-                          <Badge variant="outline">£{Number(request.amount).toFixed(2)}</Badge>
+                          <Badge variant="outline">
+                            {formatCurrency(Number(request.amount))}
+                          </Badge>
                           <Badge variant={statusVariant(request.status)}>
                             {statusLabel(request.status)}
                           </Badge>

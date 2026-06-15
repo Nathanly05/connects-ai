@@ -70,7 +70,7 @@ export default function OpenGraphImage() {
             中文 AI 聊天与智能创作平台
           </div>
           <div style={{ maxWidth: "920px", fontSize: "30px", lineHeight: 1.45, color: "#334155" }}>
-            高速对话、深度思考、Credits 管理，以及 Stripe / 微信支付宝充值。
+            高速对话、Remaining Chats 管理，以及 Stripe / 微信支付宝充值。
           </div>
         </div>
 

@@ -242,7 +242,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
               <Badge variant="secondary">用户审核</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              审核内测申请，并手动管理用户 credits。
+              审核内测申请，并手动管理用户对话次数。
             </p>
           </div>
         </header>
@@ -267,7 +267,7 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
             </div>
             <CardTitle>用户列表</CardTitle>
             <CardDescription>
-              当前结果 {users.length} 个用户。批准 pending 用户会按风控规则发放 10 credits 免费额度。
+              当前结果 {users.length} 个用户。批准 pending 用户会按风控规则发放 10 chats 免费额度。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -314,8 +314,8 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
               >
                 <option value="all">全部风控</option>
                 <option value="risky">有风险</option>
-                <option value="free_granted">已领取免费额度</option>
-                <option value="free_not_granted">未领取免费额度</option>
+                <option value="free_granted">已领取免费次数</option>
+                <option value="free_not_granted">未领取免费次数</option>
               </select>
               <Button type="submit" className="w-full">
                 搜索
@@ -348,10 +348,10 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
                       <TableRow>
                         <TableHead>邮箱</TableHead>
                         <TableHead>状态</TableHead>
-                        <TableHead>Credits</TableHead>
+                        <TableHead>Chats</TableHead>
                         <TableHead>注册 IP</TableHead>
                         <TableHead>设备 ID</TableHead>
-                        <TableHead>免费额度</TableHead>
+                        <TableHead>免费次数</TableHead>
                         <TableHead>风险备注</TableHead>
                         <TableHead>注册时间</TableHead>
                         <TableHead className="min-w-[260px]">操作</TableHead>
@@ -415,9 +415,9 @@ export default async function AdminUsersPage({ searchParams }: UsersPageProps) {
                           <Badge variant={statusVariant(profile.status)}>
                             {statusLabel(profile.status)}
                           </Badge>
-                          <Badge variant="outline">{profile.credits} credits</Badge>
+                          <Badge variant="outline">{profile.credits} chats</Badge>
                           <Badge variant={profile.free_credits_granted ? "default" : "outline"}>
-                            {profile.free_credits_granted ? "已发免费额度" : "未发免费额度"}
+                            {profile.free_credits_granted ? "已发免费次数" : "未发免费次数"}
                           </Badge>
                         </div>
                         <div className="rounded-md bg-secondary/60 px-3 py-2 text-sm leading-6 text-muted-foreground">

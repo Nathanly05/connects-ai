@@ -76,10 +76,10 @@ export async function createCheckoutSessionAction(formData: FormData) {
         {
           quantity: 1,
           price_data: {
-            currency: "gbp",
-            unit_amount: plan.amountPence,
+            currency: plan.currency,
+            unit_amount: plan.amountMinor,
             product_data: {
-              name: `${plan.name} - ${plan.credits} credits`
+              name: `${plan.name} - ${plan.credits} chats`
             }
           }
         }
@@ -95,7 +95,7 @@ export async function createCheckoutSessionAction(formData: FormData) {
       user_id: user.id,
       stripe_session_id: session.id,
       plan_name: plan.name,
-      amount_gbp: plan.amountGbp,
+      amount_gbp: plan.amountValue,
       credits: plan.credits,
       status: "pending"
     });

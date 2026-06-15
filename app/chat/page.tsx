@@ -132,9 +132,9 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
     messagesError = error?.message ?? null;
   }
 
-  const credits = profile?.credits ?? 0;
-  const isOutOfCredits = credits <= 0;
-  const isLowCredits = credits > 0 && credits <= 20;
+  const remainingChats = profile?.credits ?? 0;
+  const isOutOfChats = remainingChats <= 0;
+  const isLowChats = remainingChats > 0 && remainingChats <= 20;
 
   return (
     <main className="page-shell min-h-screen px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
@@ -154,6 +154,9 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="rounded-md border bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
+              Remaining Chats：{remainingChats}
+            </div>
             <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href="/support">
                 <LifeBuoy aria-hidden="true" />
@@ -168,30 +171,30 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
           </div>
         </header>
 
-        {isLowCredits ? (
+        {isLowChats ? (
           <Alert className="border-amber-300 bg-amber-50 text-amber-900">
             <AlertTriangle className="mr-2 inline size-4 align-[-2px]" aria-hidden="true" />
             <AlertDescription className="inline">
-              余额较低，请及时充值，避免影响使用。
+              Remaining Chats 较低，请及时购买套餐，避免影响使用。
             </AlertDescription>
           </Alert>
         ) : null}
 
-        {isOutOfCredits ? (
+        {isOutOfChats ? (
           <Alert className="border-destructive/30 bg-destructive/10 text-destructive">
             <AlertDescription>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="font-medium">Credits 不足，请充值后继续使用。</p>
+                  <p className="font-medium">Remaining Chats 已用完，请购买套餐后继续使用。</p>
                   <p className="mt-1 text-sm text-destructive/80">
-                    充值到账后页面会重新读取余额，你就可以继续发送消息。
+                    购买到账后页面会重新读取余额，你就可以继续发送消息。
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Button asChild>
                     <Link href="/billing">
                       <CreditCard aria-hidden="true" />
-                      Stripe 自动充值
+                      Stripe 自动购买
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="bg-white text-foreground hover:bg-secondary">
@@ -266,7 +269,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
                     : "新对话"}
                 </CardTitle>
                 <CardDescription>
-                  Instant 每次 1 credit，Thinking 每次 5 credits。
+                  每次完整回复消耗 1 次对话。
                 </CardDescription>
               </CardHeader>
               {messagesError ? (
@@ -282,9 +285,9 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
               )}
               <ChatComposer
                 sessionId={selectedSessionId}
-                credits={credits}
-                disabled={isOutOfCredits}
-                disabledMessage="Credits 不足，请充值后继续使用。"
+                remainingChats={remainingChats}
+                disabled={isOutOfChats}
+                disabledMessage="Remaining Chats 已用完，请购买套餐后继续使用。"
                 showQuickPrompts={!messagesError && messages.length === 0}
               />
             </div>

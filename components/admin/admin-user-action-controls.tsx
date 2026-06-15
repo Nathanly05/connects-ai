@@ -40,10 +40,10 @@ type CreditDialogProps = {
 function CreditDialog({ mode, userId, email, credits }: CreditDialogProps) {
   const isAdd = mode === "add";
   const action = isAdd ? addCreditsAction : removeCreditsAction;
-  const title = isAdd ? "增加 credits" : "减少 credits";
+  const title = isAdd ? "增加对话次数" : "减少对话次数";
   const description = isAdd
-    ? `为 ${email} 手动增加 credits。`
-    : `从 ${email} 手动扣减 credits，扣减后余额不能小于 0。`;
+    ? `为 ${email} 手动增加对话次数。`
+    : `从 ${email} 手动扣减对话次数，扣减后余额不能小于 0。`;
   const defaultReason = isAdd ? "管理员手动充值" : "管理员手动扣减";
 
   return (
@@ -62,7 +62,7 @@ function CreditDialog({ mode, userId, email, credits }: CreditDialogProps) {
         <form action={action} className="space-y-4">
           <input type="hidden" name="userId" value={userId} />
           <div className="rounded-md border bg-secondary/60 px-3 py-2 text-sm text-muted-foreground">
-            当前余额：<span className="font-medium text-foreground">{credits}</span> credits
+            当前余额：<span className="font-medium text-foreground">{credits}</span> chats
           </div>
           <div className="space-y-2">
             <Label htmlFor={`admin-${mode}-${userId}-amount`}>数量</Label>

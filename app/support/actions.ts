@@ -3,13 +3,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-type SupportType = "账号问题" | "充值问题" | "AI回复问题" | "Credits问题" | "其他";
+type SupportType = "账号问题" | "充值问题" | "AI回复问题" | "剩余次数问题" | "其他";
 
 const supportTypes: SupportType[] = [
   "账号问题",
   "充值问题",
   "AI回复问题",
-  "Credits问题",
+  "剩余次数问题",
   "其他"
 ];
 

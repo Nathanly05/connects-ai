@@ -10,8 +10,6 @@ type ChatMessage = {
   content: string;
 };
 
-type ChatMode = "instant" | "thinking";
-
 type RateLimitResult = {
   allowed: boolean;
   reason: string | null;
@@ -20,20 +18,13 @@ type RateLimitResult = {
   rate_limited: boolean;
 };
 
-const chatModeCosts: Record<ChatMode, number> = {
-  instant: 1,
-  thinking: 5
-};
-
 const bannedMessage = "账号已被限制使用，如有疑问请联系客服。";
+const chatCreditCost = 1;
+const maxInputCharacters = 16000;
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
-}
-
-function getChatMode(value: string): ChatMode {
-  return value === "thinking" ? "thinking" : "instant";
 }
 
 function redirectWithChatError(sessionId: string | null, message: string): never {
@@ -49,18 +40,47 @@ function redirectWithChatError(sessionId: string | null, message: string): never
   redirect(`/chat?${params.toString()}`);
 }
 
+function redirectToUpgrade(message = "Remaining Chats 已用完，请购买套餐后继续使用。"): never {
+  redirect(`/billing?error=${encodeURIComponent(message)}`);
+}
+
 function titleFromMessage(message: string) {
   return message.replace(/\s+/g, " ").slice(0, 40) || "新对话";
 }
 
+function isConversationMessage(
+  message: ChatMessage
+): message is { role: "user" | "assistant"; content: string } {
+  return message.role === "user" || message.role === "assistant";
+}
+
 function toOpenAIInput(messages: ChatMessage[], nextMessage: string) {
-  const history = messages
-    .filter((message) => message.role === "user" || message.role === "assistant")
+  const history: Array<{
+    role: "user" | "assistant";
+    content: string;
+  }> = [];
+  let remainingCharacters = Math.max(maxInputCharacters - nextMessage.length, 0);
+
+  for (const message of messages
+    .filter(isConversationMessage)
     .slice(-12)
-    .map((message) => ({
+    .reverse()) {
+    if (remainingCharacters <= 0) {
+      break;
+    }
+
+    const content =
+      message.content.length > remainingCharacters
+        ? message.content.slice(-remainingCharacters)
+        : message.content;
+
+    history.unshift({
       role: message.role,
-      content: message.content
-    }));
+      content
+    });
+
+    remainingCharacters -= content.length;
+  }
 
   return [
     ...history,
@@ -94,8 +114,12 @@ function friendlySaveError(message?: string) {
     return "AI 服务暂时繁忙，请稍后再试。";
   }
 
-  if (message.includes("Credits") || message.includes("credits")) {
-    return "Credits 不足，请充值后继续使用。";
+  if (
+    message.includes("Credits") ||
+    message.includes("credits") ||
+    message.includes("Remaining Chats")
+  ) {
+    return "Remaining Chats 不足，请购买套餐后继续使用。";
   }
 
   return "AI 服务暂时繁忙，请稍后再试。";
@@ -104,11 +128,13 @@ function friendlySaveError(message?: string) {
 export async function sendMessageAction(formData: FormData) {
   const sessionId = getString(formData, "sessionId") || null;
   const content = getString(formData, "content");
-  const mode = getChatMode(getString(formData, "mode"));
-  const creditCost = chatModeCosts[mode];
 
   if (!content) {
     redirectWithChatError(sessionId, "请输入消息内容。");
+  }
+
+  if (content.length > maxInputCharacters) {
+    redirectWithChatError(sessionId, "消息内容过长，请缩短后再发送。");
   }
 
   const supabase = await createClient();
@@ -145,18 +171,14 @@ export async function sendMessageAction(formData: FormData) {
 
   const currentCredits = profile?.credits ?? 0;
 
-  if (currentCredits <= 0) {
-    redirectWithChatError(sessionId, "Credits 不足，请充值后继续使用。");
-  }
-
-  if (currentCredits < creditCost) {
-    redirectWithChatError(sessionId, "Credits 不足，请充值后继续使用。");
+  if (currentCredits < chatCreditCost) {
+    redirectToUpgrade();
   }
 
   const { data: rateLimitRows, error: rateLimitError } = await supabase.rpc(
     "check_chat_rate_limit",
     {
-      p_credit_cost: creditCost
+      p_credit_cost: chatCreditCost
     }
   );
 
@@ -208,7 +230,7 @@ export async function sendMessageAction(formData: FormData) {
       instructions:
         "你是 Connects AI 的中文助手。请用简洁、清晰、友好的中文回答用户。",
       input: toOpenAIInput(previousMessages, content),
-      max_output_tokens: 1200
+      max_output_tokens: 2000
     });
 
     assistantContent = response.output_text?.trim() || "";
@@ -225,11 +247,17 @@ export async function sendMessageAction(formData: FormData) {
     p_user_content: content,
     p_assistant_content: assistantContent,
     p_title: titleFromMessage(content),
-    p_mode: mode
+    p_mode: "instant"
   });
 
   if (saveError) {
-    redirectWithChatError(sessionId, friendlySaveError(saveError.message));
+    const message = friendlySaveError(saveError.message);
+
+    if (message.includes("Remaining Chats")) {
+      redirectToUpgrade(message);
+    }
+
+    redirectWithChatError(sessionId, message);
   }
 
   const savedSessionId = Array.isArray(savedRows)

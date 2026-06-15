@@ -80,7 +80,7 @@ export async function AppNav({ active }: AppNavProps) {
 
   const profile = data as Profile | null;
   const email = profile?.email ?? user.email ?? "user";
-  const credits = profile?.credits ?? 0;
+  const remainingChats = profile?.credits ?? 0;
   const isAdmin = profile?.role === "admin" && profile.status === "approved";
   const links = isAdmin
     ? [...baseLinks, { key: "admin" as const, label: "Admin", href: "/admin" }]
@@ -108,7 +108,7 @@ export async function AppNav({ active }: AppNavProps) {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Badge variant="secondary">{credits} Credits</Badge>
+          <Badge variant="secondary">Remaining Chats {remainingChats}</Badge>
           <Link
             href="/account"
             className="flex items-center gap-2 rounded-md border bg-white px-2 py-1.5 text-sm transition-colors hover:bg-secondary"
@@ -139,7 +139,9 @@ export async function AppNav({ active }: AppNavProps) {
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{email}</p>
-                <p className="text-xs text-muted-foreground">{credits} Credits</p>
+                <p className="text-xs text-muted-foreground">
+                  Remaining Chats {remainingChats}
+                </p>
               </div>
             </div>
             <div className="grid gap-1">

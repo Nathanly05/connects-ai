@@ -23,7 +23,7 @@ export default function PricingPage() {
               <Badge variant="secondary">GlobePay 人工审核</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              选择套餐后上传付款截图，管理员审核通过后发放 credits。
+              选择套餐后提交充值申请，管理员审核通过后发放 Remaining Chats。
             </p>
           </div>
           <Button asChild variant="outline">
@@ -49,7 +49,7 @@ export default function PricingPage() {
               <CardContent className="flex min-h-[250px] flex-col">
                 <div>
                   <p className="text-3xl font-semibold tracking-normal">{plan.priceLabel}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">{plan.credits} Credits</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{plan.credits} chats</p>
                 </div>
                 <ul className="mt-6 space-y-3 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">

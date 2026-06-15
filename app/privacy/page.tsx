@@ -14,8 +14,8 @@ export default function PrivacyPage() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">收集的信息</h2>
         <p>
-          Connects AI 可能收集用户邮箱、登录信息、聊天记录、充值记录、Credits 变动记录
-          以及与账号安全相关的基础使用信息。
+          Connects AI 可能收集用户邮箱、登录信息、聊天记录、充值记录、
+          Remaining Chats 变动记录以及与账号安全相关的基础使用信息。
         </p>
       </section>
 
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
         <h2 className="text-base font-semibold text-foreground">数据用途</h2>
         <p>
           数据主要用于账号管理、身份验证、AI 服务调用、聊天历史展示、充值处理、
-          Credits 管理、安全风控、客服支持和产品体验改进。
+          Remaining Chats 管理、安全风控、客服支持和产品体验改进。
         </p>
       </section>
 
