@@ -19,6 +19,8 @@ type RateLimitResult = {
   rate_limited: boolean;
 };
 
+type RateLimitRpcResult = boolean | RateLimitResult | RateLimitResult[] | null;
+
 type ChatRequestBody = {
   sessionId?: string | null;
   content?: string | null;
@@ -138,6 +140,22 @@ function shouldRetrySaveWithoutMode(message?: string) {
   );
 }
 
+function getRateLimitDecision(result: RateLimitRpcResult) {
+  if (typeof result === "boolean") {
+    return {
+      allowed: result,
+      reason: result ? null : "发送过快，请稍后再试"
+    };
+  }
+
+  const row = Array.isArray(result) ? result[0] : result;
+
+  return {
+    allowed: row?.allowed ?? true,
+    reason: row?.reason ?? null
+  };
+}
+
 async function parseBody(request: NextRequest): Promise<ChatRequestBody> {
   try {
     return (await request.json()) as ChatRequestBody;
@@ -205,12 +223,10 @@ export async function POST(request: NextRequest) {
   );
 
   if (!rateLimitError) {
-    const rateLimit = Array.isArray(rateLimitRows)
-      ? (rateLimitRows[0] as RateLimitResult | undefined)
-      : (rateLimitRows as RateLimitResult | null);
+    const rateLimit = getRateLimitDecision(rateLimitRows as RateLimitRpcResult);
 
-    if (!rateLimit?.allowed) {
-      return jsonError(rateLimit?.reason || "发送过快，请稍后再试", 429);
+    if (!rateLimit.allowed) {
+      return jsonError(rateLimit.reason || "发送过快，请稍后再试", 429);
     }
   } else {
     console.error("check_chat_rate_limit failed; continuing chat send", rateLimitError);
