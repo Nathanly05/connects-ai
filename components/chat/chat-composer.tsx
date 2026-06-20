@@ -68,7 +68,7 @@ export function ChatComposer({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("/api/chat/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
