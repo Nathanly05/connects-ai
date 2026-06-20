@@ -1,4 +1,4 @@
-# Connects AI
+# One AI
 
 中文 AI 聊天平台，小范围内测使用。当前已完成：
 

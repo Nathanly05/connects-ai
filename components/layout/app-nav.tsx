@@ -93,7 +93,7 @@ export async function AppNav({ active }: AppNavProps) {
           <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
             <Sparkles className="size-5" aria-hidden="true" />
           </div>
-          <span className="truncate text-base font-semibold tracking-normal">Connects AI</span>
+          <span className="truncate text-base font-semibold tracking-normal">One AI</span>
         </Link>
 
         <div className="hidden items-center gap-1 md:flex">

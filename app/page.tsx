@@ -20,7 +20,7 @@ export default function HomePage() {
             <span className="flex size-10 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
               C
             </span>
-            <span className="text-lg font-semibold tracking-normal">Connects AI</span>
+            <span className="text-lg font-semibold tracking-normal">One AI</span>
           </Link>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -40,7 +40,7 @@ export default function HomePage() {
               <Badge variant="outline">小范围内测</Badge>
             </div>
             <h1 className="text-4xl font-semibold tracking-normal text-foreground sm:text-5xl lg:text-6xl">
-              Connects AI
+              One AI
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
               一个面向中文用户的 AI 聊天与智能创作平台，支持高速对话、

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Connects AI 中文 AI 助手平台";
+export const alt = "One AI 中文 AI 助手平台";
 export const size = {
   width: 1200,
   height: 630
@@ -54,7 +54,7 @@ export default function OpenGraphImage() {
               gap: "8px"
             }}
           >
-            <div style={{ fontSize: "34px", fontWeight: 700 }}>Connects AI</div>
+            <div style={{ fontSize: "34px", fontWeight: 700 }}>One AI</div>
             <div style={{ fontSize: "24px", color: "#475569" }}>中文 AI 助手平台</div>
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function OpenGraphImage() {
           <span>•</span>
           <span>Private Beta</span>
           <span>•</span>
-          <span>Connects AI</span>
+          <span>One AI</span>
         </div>
       </div>
     ),

@@ -27,7 +27,7 @@ export function LegalPageShell({ title, description, children }: LegalPageShellP
             <span className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Sparkles className="size-5" aria-hidden="true" />
             </span>
-            <span className="text-lg font-semibold tracking-normal">Connects AI</span>
+            <span className="text-lg font-semibold tracking-normal">One AI</span>
           </Link>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild variant="outline" className="w-full sm:w-auto">
@@ -48,7 +48,7 @@ export function LegalPageShell({ title, description, children }: LegalPageShellP
         <Card>
           <CardHeader>
             <Badge variant="secondary" className="mb-2 w-fit">
-              Connects AI
+              One AI
             </Badge>
             <CardTitle className="text-2xl">{title}</CardTitle>
             <CardDescription className="leading-6">{description}</CardDescription>

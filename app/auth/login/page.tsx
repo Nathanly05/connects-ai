@@ -25,7 +25,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <PageToast message={params.error} variant="error" />
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>登录 Connects AI</CardTitle>
+          <CardTitle>登录 One AI</CardTitle>
           <CardDescription>
             登录后系统会根据账号审核状态自动跳转。
           </CardDescription>

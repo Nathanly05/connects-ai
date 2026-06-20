@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const siteTitle = "Connects AI - 中文 AI 助手平台";
+const siteTitle = "One AI - 中文 AI 助手平台";
 const siteDescription =
   "一个面向中文用户的 AI 聊天与智能创作平台，支持高速对话、Remaining Chats 管理和多种支付方式。";
 const siteUrl = getSiteUrl();
@@ -13,19 +13,19 @@ function getSiteUrl() {
     try {
       return new URL(configuredUrl);
     } catch {
-      return new URL("https://connects-ai.vercel.app");
+      return new URL("https://www.oneaihub.org");
     }
   }
 
-  return new URL("https://connects-ai.vercel.app");
+  return new URL("https://www.oneaihub.org");
 }
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
-  applicationName: "Connects AI",
+  applicationName: "One AI",
   title: {
     default: siteTitle,
-    template: "%s | Connects AI"
+    template: "%s | One AI"
   },
   description: siteDescription,
   alternates: {
@@ -44,14 +44,14 @@ export const metadata: Metadata = {
     description: siteDescription,
     type: "website",
     url: "/",
-    siteName: "Connects AI",
+    siteName: "One AI",
     locale: "zh_CN",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Connects AI 中文 AI 助手平台"
+        alt: "One AI 中文 AI 助手平台"
       }
     ]
   },

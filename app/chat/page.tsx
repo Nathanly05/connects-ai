@@ -146,7 +146,7 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <MessageCircle className="size-5 text-primary" aria-hidden="true" />
-              <h1 className="text-xl font-semibold tracking-normal">Connects AI</h1>
+              <h1 className="text-xl font-semibold tracking-normal">One AI</h1>
               <Badge variant="secondary">中文 AI 聊天</Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">

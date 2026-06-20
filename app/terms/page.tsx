@@ -9,12 +9,12 @@ export default function TermsPage() {
   return (
     <LegalPageShell
       title="服务条款"
-      description="使用 Connects AI 前，请先了解平台的基础服务规则。"
+      description="使用 One AI 前，请先了解平台的基础服务规则。"
     >
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">平台说明</h2>
         <p>
-          Connects AI 是一个 AI 工具平台，面向中文用户提供 AI 聊天、智能创作和相关
+          One AI 是一个 AI 工具平台，面向中文用户提供 AI 聊天、智能创作和相关
           Remaining Chats 使用服务。
         </p>
       </section>
@@ -22,7 +22,7 @@ export default function TermsPage() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">合法使用</h2>
         <p>
-          用户需遵守适用法律法规，不得使用 Connects AI 生成、传播或协助处理违法、
+          用户需遵守适用法律法规，不得使用 One AI 生成、传播或协助处理违法、
           侵权、欺诈、骚扰、仇恨、暴力或其他不当内容。
         </p>
       </section>
@@ -53,7 +53,7 @@ export default function TermsPage() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">Remaining Chats 说明</h2>
         <p>
-          Remaining Chats 为 Connects AI 平台内使用额度，可用于发起 AI 对话，
+          Remaining Chats 为 One AI 平台内使用额度，可用于发起 AI 对话，
           不代表现金账户、存款、证券或其他金融资产。
         </p>
       </section>

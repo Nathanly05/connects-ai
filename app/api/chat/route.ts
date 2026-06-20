@@ -266,7 +266,7 @@ export async function POST(request: NextRequest) {
     const response = await openai.responses.create({
       model: defaultChatModel,
       instructions:
-        "你是 Connects AI 的中文助手。请用简洁、清晰、友好的中文回答用户。",
+        "你是 One AI 的中文助手。请用简洁、清晰、友好的中文回答用户。",
       input: toOpenAIInput(previousMessages, content),
       max_output_tokens: 2000
     });

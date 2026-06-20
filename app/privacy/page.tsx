@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">收集的信息</h2>
         <p>
-          Connects AI 可能收集用户邮箱、登录信息、聊天记录、充值记录、
+          One AI 可能收集用户邮箱、登录信息、聊天记录、充值记录、
           Remaining Chats 变动记录以及与账号安全相关的基础使用信息。
         </p>
       </section>
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-foreground">数据共享</h2>
         <p>
-          Connects AI 不主动出售用户数据。为提供服务，部分必要数据可能会由 Supabase、
+          One AI 不主动出售用户数据。为提供服务，部分必要数据可能会由 Supabase、
           OpenAI、Stripe 等服务提供商处理。
         </p>
       </section>

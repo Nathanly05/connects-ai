@@ -16,7 +16,7 @@ export function AuthShell({ children, eyebrow = "小范围内测" }: AuthShellPr
             className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm font-medium text-foreground shadow-sm"
           >
             <Sparkles className="size-4 text-primary" aria-hidden="true" />
-            Connects AI
+            One AI
           </Link>
           <p className="mt-8 text-sm font-medium text-primary">{eyebrow}</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:text-5xl">
